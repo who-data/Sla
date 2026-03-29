@@ -1136,6 +1136,26 @@ end
 local autoKillSheriffConn  = nil
 local autoKillSheriffLast  = 0
 
+-- Verifica se o player tem arma (gun/revolver) equipada ou na mochila
+local function PlayerHasGun(plr)
+    if not plr or not plr.Character then return false end
+    for _, item in ipairs(plr.Character:GetChildren()) do
+        if item:IsA("Tool") then
+            local n = item.Name:lower()
+            if n:find("gun") or n == "revolver" then return true end
+        end
+    end
+    if plr.Backpack then
+        for _, item in ipairs(plr.Backpack:GetChildren()) do
+            if item:IsA("Tool") then
+                local n = item.Name:lower()
+                if n:find("gun") or n == "revolver" then return true end
+            end
+        end
+    end
+    return false
+end
+
 local function ApplyAutoKillSheriff(state)
     if autoKillSheriffConn then autoKillSheriffConn:Disconnect(); autoKillSheriffConn = nil end
     if not state then return end
@@ -1144,24 +1164,48 @@ local function ApplyAutoKillSheriff(state)
     autoKillSheriffConn = RunService.Heartbeat:Connect(function()
         if not Config.AutoKillSheriff then return end
         if _killBusy then return end
+        -- Só funciona quando somos Murderer
         local myRole = RoleCache[LocalPlayer.Name]
         if myRole ~= "Murderer" then return end
         if tick() - autoKillSheriffLast < Config.AutoKillSheriffDelay then return end
 
         local myChar = LocalPlayer.Character
-        local myHRP  = myChar and myChar:FindFirstChild("HumanoidRootPart")
-        if not myHRP then return end
+        if not myChar then return end
 
-        -- Acha alvo antes de bloquear
+        -- Pega faca (precisa estar equipada ou na mochila)
+        local knife = nil
+        for _, tool in ipairs(myChar:GetChildren()) do
+            if tool:IsA("Tool") and (tool.Name:lower():find("knife") or tool.Name:lower():find("fac")) then
+                knife = tool; break
+            end
+        end
+        -- Tenta equipar da mochila se necessário
+        if not knife then
+            for _, tool in ipairs(LocalPlayer.Backpack:GetChildren()) do
+                if tool:IsA("Tool") and (tool.Name:lower():find("knife") or tool.Name:lower():find("fac")) then
+                    myChar:FindFirstChildOfClass("Humanoid"):EquipTool(tool)
+                    task.wait(0.05)
+                    knife = myChar:FindFirstChild(tool.Name)
+                    break
+                end
+            end
+        end
+        if not knife then return end
+
+        -- Acha alvo: Sheriff, Hero OU qualquer QM que tenha arma
         local targetPlr, targetRole = nil, nil
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer and plr.Character then
-                local role = RoleCache[plr.Name]
-                if role == "Sheriff" or role == "Hero" then
-                    local pHum = plr.Character:FindFirstChild("Humanoid")
-                    local pHRP = plr.Character:FindFirstChild("HumanoidRootPart")
-                    if pHum and pHum.Health > 0 and pHRP then
+                local role = RoleCache[plr.Name] or "Unknown"
+                local pHum = plr.Character:FindFirstChild("Humanoid")
+                local pHRP = plr.Character:FindFirstChild("HumanoidRootPart")
+                if pHum and pHum.Health > 0 and pHRP then
+                    -- Prioridade: Sheriff/Hero; ou QM com arma
+                    if role == "Sheriff" or role == "Hero" then
                         targetPlr = plr; targetRole = role; break
+                    elseif role ~= "Murderer" and role ~= "Lobby" and PlayerHasGun(plr) then
+                        -- QM com arma — guarda mas continua buscando Sheriff/Hero
+                        if not targetPlr then targetPlr = plr; targetRole = role end
                     end
                 end
             end
@@ -1171,35 +1215,17 @@ local function ApplyAutoKillSheriff(state)
         autoKillSheriffLast = tick()
         _killBusy = true
 
-        -- Fix: task.spawn para não bloquear Heartbeat (causava personagem sumir da tela)
         task.spawn(function()
-            local fromBackpack = EquipKnife()
-            local remote = GetKnifeRemote()
-            if remote then
-                local pHRP = targetPlr.Character and targetPlr.Character:FindFirstChild("HumanoidRootPart")
-                if pHRP then
-                    local origCF = myHRP.CFrame
-                    if TweenFloatPart then
-                        local origFloat = TweenFloatPart.CFrame
-                        tweenMoving = false
-                        TweenFloatPart.CFrame = pHRP.CFrame * CFrame.new(0, 0, 2)
-                        task.wait(0.08)
-                        pcall(function() remote:FireServer(pHRP) end)
-                        task.wait(0.1)
-                        if TweenFloatPart then TweenFloatPart.CFrame = origFloat end
-                    else
-                        myHRP.CFrame = pHRP.CFrame * CFrame.new(0, 0, 2)
-                        task.wait(0.05)
-                        pcall(function() remote:FireServer(pHRP) end)
-                        task.wait(0.08)
-                        myHRP.CFrame = origCF
-                    end
-                    N("AUTO KILL", "Matou "..targetRole..": "..targetPlr.Name, "#FF6600", 1.5)
-                end
-            end
-            if fromBackpack then
-                local knife = myChar and myChar:FindFirstChild("Knife")
-                if knife then knife.Parent = LocalPlayer.Backpack end
+            local pChar = targetPlr.Character
+            local pHRP  = pChar and pChar:FindFirstChild("HumanoidRootPart")
+            if pHRP and knife and knife.Handle then
+                -- Mesmo sistema do KillAll: puxa o HRP do alvo para cima da faca
+                pHRP.CFrame = knife.Handle.CFrame
+                pHRP.AssemblyLinearVelocity  = Vector3.zero
+                pHRP.AssemblyAngularVelocity = Vector3.zero
+                local remote = GetKnifeRemote()
+                if remote then pcall(function() remote:FireServer(pHRP) end) end
+                N("AUTO KILL", "Matou "..targetRole..": "..targetPlr.Name, "#FF6600", 1.5)
             end
             _killBusy = false
         end)
@@ -1267,138 +1293,118 @@ end
 -- Usa Velocity+RotVelocity via Heartbeat/RenderStepped — mais
 -- confiável que AssemblyLinearVelocity+BodyVelocity
 -- ============================================================
-local _flingFL  = false
-local _flingOri = nil
-local _flingRet = false
-local _flingTog = true
-local _flingC1, _flingC2, _flingC3 = nil, nil, nil
-
-local function _flingStop()
-    _flingFL = false
-    if _flingC1 then _flingC1:Disconnect(); _flingC1 = nil end
-    if _flingC2 then _flingC2:Disconnect(); _flingC2 = nil end
-    if _flingC3 then _flingC3:Disconnect(); _flingC3 = nil end
-    local char = LocalPlayer.Character
-    if char then
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        if hum then workspace.CurrentCamera.CameraSubject = hum end
-    end
-end
-
-local function _flingBack()
-    if _flingRet then return end
-    _flingRet = true
-    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if hrp and _flingOri then
-        hrp.Velocity = Vector3.zero
-        task.wait()
-        hrp.CFrame = CFrame.new(_flingOri)
-    end
-    _flingStop()
-end
+local FLING_TIMEOUT = 2.5
 
 local function FlingPlayer(targetPlayer)
-    local char = targetPlayer.Character
-    if not char then flingInProgress = false; return end
-    local tgt  = char:FindFirstChild("HumanoidRootPart")
-    local tHum = char:FindFirstChildOfClass("Humanoid")
-    if not tgt or not tHum then flingInProgress = false; return end
-    if tHum.Sit then flingInProgress = false; return end
-
-    _flingStop()
-    _flingFL  = true
-    _flingRet = false
     flingInProgress = true
-
     local myChar = LocalPlayer.Character
-    local me = myChar and myChar:FindFirstChild("HumanoidRootPart")
-    if not me then flingInProgress = false; return end
-    _flingOri = me.Position
+    if not myChar then flingInProgress = false; return end
+    local myHum  = myChar:FindFirstChildOfClass("Humanoid")
+    local myRoot = myChar:FindFirstChild("HumanoidRootPart")
+    if not (myHum and myRoot) then flingInProgress = false; return end
 
-    workspace.CurrentCamera.CameraSubject = tHum
+    local targetChar = targetPlayer.Character
+    if not targetChar then flingInProgress = false; return end
+    local targetHum  = targetChar:FindFirstChildOfClass("Humanoid")
+    local targetRoot = targetHum and targetHum.RootPart
+    local targetHead = targetChar:FindFirstChild("Head")
+    local accessory  = targetChar:FindFirstChildOfClass("Accessory")
+    local handle     = accessory and accessory:FindFirstChild("Handle")
 
-    -- FallenPartsDestroyHeight = NaN — impede sumida no void
-    local origFPDH = workspace.FallenPartsDestroyHeight
-    workspace.FallenPartsDestroyHeight = 0/0
+    local oldPos = myRoot.CFrame
 
-    -- C1: mantém nosso HRP caindo rápido para forçar contato
-    _flingC1 = RunService.Heartbeat:Connect(function()
-        if not _flingFL then return end
-        local h = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if h then
-            h.Velocity = Vector3.new(0, -9e7, 0)
-            RunService.RenderStepped:Wait()
-            h.Velocity = Vector3.new(0, -9e7, 0)
-            RunService.Stepped:Wait()
-            h.Velocity = Vector3.new(0, -2, 0)
+    -- Aponta câmera pro alvo
+    repeat
+        task.wait()
+        workspace.CurrentCamera.CameraSubject = targetHead or handle or targetHum
+    until workspace.CurrentCamera.CameraSubject == (targetHead or handle or targetHum)
+
+    local function forcePosition(basePart, offset, angle)
+        local targetCF = CFrame.new(basePart.Position) * offset * angle
+        myRoot.CFrame = targetCF
+        myChar:SetPrimaryPartCFrame(targetCF)
+        myRoot.Velocity    = Vector3.new(9e7, 9e8, 9e7)
+        myRoot.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+    end
+
+    local function flingBasePart(basePart)
+        local start = tick()
+        local ang = 0
+        repeat
+            if myRoot and targetHum then
+                ang = ang + 100
+                for _, off in ipairs{
+                    CFrame.new(0,  1.5, 0),
+                    CFrame.new(0, -1.5, 0),
+                    CFrame.new( 2.25,  1.5, -2.25),
+                    CFrame.new(-2.25, -1.5,  2.25)
+                } do
+                    forcePosition(basePart, off + targetHum.MoveDirection, CFrame.Angles(math.rad(ang), 0, 0))
+                    task.wait()
+                end
+            end
+        until basePart.Velocity.Magnitude > 500 or tick() - start > FLING_TIMEOUT
+    end
+
+    -- BodyVelocity para forçar a física
+    local bv = Instance.new("BodyVelocity")
+    bv.Name     = "FlingVelocity"
+    bv.Velocity  = Vector3.new(9e8, 9e8, 9e8)
+    bv.MaxForce  = Vector3.new(math.huge, math.huge, math.huge)
+    bv.Parent    = myRoot
+    myHum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+
+    local targetPart = targetRoot or targetHead or handle
+    if targetPart then flingBasePart(targetPart) end
+
+    bv:Destroy()
+    myHum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+
+    -- Volta câmera pro jogador
+    repeat
+        task.wait()
+        workspace.CurrentCamera.CameraSubject = myHum
+    until workspace.CurrentCamera.CameraSubject == myHum
+
+    -- Volta ao lugar original
+    repeat
+        local cf = oldPos * CFrame.new(0, 0.5, 0)
+        myRoot.CFrame = cf
+        myChar:SetPrimaryPartCFrame(cf)
+        myHum:ChangeState(Enum.HumanoidStateType.GettingUp)
+        for _, part in ipairs(myChar:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.Velocity    = Vector3.zero
+                part.RotVelocity = Vector3.zero
+            end
         end
-    end)
+        task.wait()
+    until (myRoot.Position - oldPos.p).Magnitude < 25
 
-    -- C2: posiciona nosso HRP ao lado do alvo a cada RenderStepped
-    _flingC2 = RunService.RenderStepped:Connect(function()
-        if not _flingFL then return end
-        local th = char:FindFirstChild("HumanoidRootPart")
-        local h  = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if th and h then
-            local off = _flingTog and 0.3 or -0.3
-            _flingTog = not _flingTog
-            local dir = th.CFrame.LookVector * off
-            local pos = Vector3.new(
-                th.Position.X + th.Velocity.X * 0.63 + dir.X,
-                th.Position.Y,
-                th.Position.Z + th.Velocity.Z * 0.63 + dir.Z
-            )
-            h.CFrame = CFrame.new(pos) * CFrame.Angles(0, math.rad(90), 0)
-        end
-    end)
-
-    -- C3: detecta fling bem-sucedido (vel > 500) e volta
-    _flingC3 = RunService.Heartbeat:Connect(function()
-        if not _flingFL then return end
-        local th  = char:FindFirstChild("HumanoidRootPart")
-        local tH2 = char:FindFirstChildOfClass("Humanoid")
-        if (not tH2 or tH2.Health <= 0) or (th and th.Velocity.Magnitude > 500) then
-            workspace.FallenPartsDestroyHeight = origFPDH
-            _flingBack()
-            flingInProgress = false
-        end
-    end)
-
-    -- Timeout de 5s
-    task.delay(5, function()
-        if not _flingRet then
-            workspace.FallenPartsDestroyHeight = origFPDH
-            _flingBack()
-            flingInProgress = false
-        end
-    end)
+    flingInProgress = false
 end
 
 local function FlingAllLoop()
     flingInProgress = true
+    local players = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then table.insert(players, p) end
+    end
+    if #players == 0 then flingInProgress = false; return end
+
+    local index = 1
     while flingAllActive do
-        -- Recalcula a cada volta (jogador pode sair)
-        local players = {}
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character
-              and p.Character:FindFirstChild("Humanoid")
-              and p.Character.Humanoid.Health > 0 then
-                table.insert(players, p)
-            end
+        local target = players[index]
+        if target and target.Character
+          and target.Character:FindFirstChild("Humanoid")
+          and target.Character.Humanoid.Health > 0 then
+            flingActive = true
+            flingTargetPlayer = target
+            FlingPlayer(target)
+            flingActive = false
         end
-        if #players == 0 then task.wait(1); continue end
-        for _, t in ipairs(players) do
-            if not flingAllActive then break end
-            if t and t.Parent == Players and t.Character then
-                flingActive = true; flingTargetPlayer = t
-                FlingPlayer(t)
-                -- espera o fling terminar (max 6s)
-                local w = 0
-                while flingInProgress and w < 6 do task.wait(0.1); w = w + 0.1 end
-                flingActive = false
-            end
-            task.wait(0.5)
-        end
+        index = index % #players + 1
+        task.wait(0.5)
     end
     flingInProgress = false
 end
@@ -1408,8 +1414,6 @@ local function StopFling()
     if flingThread then task.cancel(flingThread); flingThread=nil end
     Config.FlingSheriff=false; Config.FlingMurderer=false; Config.FlingHero=false; Config.FlingAll=false
     flingInProgress=false
-    -- Para as connections do novo sistema de fling
-    pcall(_flingStop)
 end
 
 local function StartFling(target)
@@ -1960,61 +1964,87 @@ InvisBtn.Text="INVISIBLE"; InvisBtn.TextColor3=Color3.fromRGB(140,50,255)
 InvisBtn.Font=Enum.Font.GothamBlack; InvisBtn.TextSize=11; InvisBtn.AutoButtonColor=true
 MakeDraggableCornersOnly(InvisFrame)
 
-local _invisOrigTransparencies = {}
+
+-- Variáveis do ghost/invis (Seat+Weld approach)
+local _invisChair = nil
+local _invisWeld  = nil
+
+local function _invisClean()
+    local old = Workspace:FindFirstChild("NexusInvisChair")
+    if old then old:Destroy() end
+    if _invisChair then pcall(function() _invisChair:Destroy() end); _invisChair = nil end
+    _invisWeld = nil
+end
+
+local function _invisApply(char)
+    if not char then return end
+    _invisClean()
+
+    local hrp   = char:FindFirstChild("HumanoidRootPart")
+    local hum   = char:FindFirstChildOfClass("Humanoid")
+    local torso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
+    if not (hrp and hum and torso) then return end
+
+    local savedCF = hrp.CFrame
+
+    -- 1) Esconde visualmente para outros (local)
+    for _, v in pairs(char:GetDescendants()) do
+        if (v:IsA("BasePart") or v:IsA("Decal")) and v.Name ~= "HumanoidRootPart" then
+            v.LocalTransparencyModifier = 1
+        end
+    end
+
+    -- 2) Cria Seat invisível e weld no torso → char segue o Seat
+    _invisChair = Instance.new("Seat", Workspace)
+    _invisChair.Name        = "NexusInvisChair"
+    _invisChair.Anchored    = false
+    _invisChair.CanCollide  = false
+    _invisChair.Transparency = 1
+    _invisChair.Size        = Vector3.new(1, 1, 1)
+    _invisChair.CFrame      = savedCF
+
+    _invisWeld        = Instance.new("Weld", _invisChair)
+    _invisWeld.Part0  = _invisChair
+    _invisWeld.Part1  = torso
+
+    task.wait()
+
+    -- 3) Move o Seat (e o char) pra fora do mapa → servidor enxerga lá, não toma hit
+    _invisChair.CFrame = CFrame.new(savedCF.Position + Vector3.new(0, 4000, 0))
+
+    -- 4) CameraOffset corrige câmera: câmera fica onde o jogador estava visualmente
+    local offsetVec = savedCF.Position - hrp.Position
+    hum.CameraOffset = offsetVec
+end
+
+local function _invisRemove(char)
+    _invisClean()
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then hum.CameraOffset = Vector3.zero end
+    for _, v in pairs(char:GetDescendants()) do
+        if (v:IsA("BasePart") or v:IsA("Decal")) and v.Name ~= "HumanoidRootPart" then
+            v.LocalTransparencyModifier = 0
+        end
+    end
+end
 
 local function ToggleInvis()
     InvisActive = not InvisActive
     Config.InvisActive = InvisActive
     SaveConfig()
+    local char = LocalPlayer.Character
     if InvisActive then
         InvisBtn.Text="ACTIVE"; InvisBtn.TextColor3=Color3.fromRGB(0,255,150)
         InvisStroke.Color=Color3.fromRGB(0,255,150)
-        _invisOrigTransparencies = {}
-        if LocalPlayer.Character then
-            for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
-                if v:IsA("BasePart") or v:IsA("Decal") then
-                    _invisOrigTransparencies[v] = v.Transparency
-                    if v.Name ~= "HumanoidRootPart" then
-                        v.LocalTransparencyModifier = 1
-                    end
-                end
-            end
-        end
+        _invisApply(char)
     else
         InvisBtn.Text="INVISIBLE"; InvisBtn.TextColor3=Color3.fromRGB(140,50,255)
         InvisStroke.Color=Color3.fromRGB(140,50,255)
-        if LocalPlayer.Character then
-            for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
-                if (v:IsA("BasePart") or v:IsA("Decal")) and v.Name ~= "HumanoidRootPart" then
-                    v.LocalTransparencyModifier = 0
-                end
-            end
-        end
-        _invisOrigTransparencies = {}
+        _invisRemove(char)
     end
 end
 InvisBtn.MouseButton1Click:Connect(ToggleInvis)
-
-RunService.Heartbeat:Connect(function()
-    if InvisActive then
-        local Char = LocalPlayer.Character
-        if Char then
-            local Root = Char:FindFirstChild("HumanoidRootPart")
-            local Hum  = Char:FindFirstChild("Humanoid")
-            if Root and Hum then
-                local oldCF        = Root.CFrame
-                local oldCamOffset = Hum.CameraOffset
-                Root.CFrame        = oldCF * CFrame.new(0, -200000, 0)
-                -- Fix: usa oldCF (não invisCF) para calcular CameraOffset
-                -- invisCF:ToObjectSpace causava câmera fora do mapa
-                Hum.CameraOffset   = oldCF:ToObjectSpace(CFrame.new(oldCF.Position)).Position
-                RunService.RenderStepped:Wait()
-                Root.CFrame        = oldCF
-                Hum.CameraOffset   = oldCamOffset
-            end
-        end
-    end
-end)
 
 -- ============================================================
 -- DESYNC BUTTON (flutuante)
@@ -2046,59 +2076,81 @@ local function setHRPTransparency(char, t)
     if hrp and hrp:IsA("BasePart") then hrp.Transparency=t end
 end
 
+-- Ghost moderno do README: Highlight + BillboardGui + tween
+local function createModernGhost(cframe)
+    if ghostPart then ghostPart:Destroy() end
+    local ghostColor = Color3.fromRGB(140, 50, 255)
+    local ghost = Instance.new("Part")
+    ghost.Name        = "NexusDesyncGhost"
+    ghost.Size        = Vector3.new(4, 6, 4)
+    ghost.Shape       = Enum.PartType.Cylinder
+    ghost.CFrame      = cframe * CFrame.Angles(0, 0, math.rad(90))
+    ghost.Anchored    = true
+    ghost.CanCollide  = false
+    ghost.Material    = Enum.Material.ForceField
+    ghost.Color       = ghostColor
+    ghost.Transparency = 0
+    ghost.CastShadow  = false
+    ghost.Parent      = Workspace
+
+    local hl = Instance.new("Highlight")
+    hl.Adornee           = ghost
+    hl.FillColor         = ghostColor
+    hl.OutlineColor      = Color3.fromRGB(255, 255, 255)
+    hl.FillTransparency  = 0.8
+    hl.OutlineTransparency = 0.2
+    hl.Parent            = ghost
+
+    local bb = Instance.new("BillboardGui")
+    bb.Adornee     = ghost
+    bb.Size        = UDim2.new(0, 200, 0, 50)
+    bb.StudsOffset = Vector3.new(0, 4, 0)
+    bb.AlwaysOnTop = true
+    local lbl = Instance.new("TextLabel", bb)
+    lbl.Size                  = UDim2.new(1, 0, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text                  = "SERVER POSITION"
+    lbl.Font                  = Enum.Font.Oswald
+    lbl.TextColor3            = ghostColor
+    lbl.TextStrokeTransparency = 0
+    lbl.TextSize              = 14
+    bb.Parent = ghost
+
+    TweenService:Create(hl, TweenInfo.new(2, Enum.EasingStyle.Sine,
+        Enum.EasingDirection.InOut, -1, true), {FillTransparency = 0.5}):Play()
+
+    return ghost
+end
+
 local function ToggleDesync()
     desync_on = not desync_on
     local character = LocalPlayer.Character
-    if not character then desync_on = not desync_on; return end -- reverte se falhou
+    if not character then desync_on = not desync_on; return end
+
     if desync_on then
         local hrp_ds = character:FindFirstChild("HumanoidRootPart")
         if not hrp_ds then desync_on = false; return end
-        local origCF = hrp_ds.CFrame
+        local originalCFrame = hrp_ds.CFrame
 
         -- Destrói cadeira antiga se existir
         local old = Workspace:FindFirstChild("NexusDesyncChair")
         if old then old:Destroy() end
 
+        -- Seat NÃO-anchored + Weld no torso (sistema do README)
         desyncChair = Instance.new("Seat", Workspace)
-        desyncChair.Anchored    = true
+        desyncChair.Anchored    = false
         desyncChair.CanCollide  = false
         desyncChair.Name        = "NexusDesyncChair"
         desyncChair.Transparency = 1
-        desyncChair.CFrame      = origCF
+        desyncChair.CFrame      = originalCFrame
 
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            -- Sit() cria o desync de rede (personagem senta mas fica no lugar)
-            local ok = pcall(function() desyncChair:Sit(humanoid) end)
-            if not ok then
-                -- fallback: tenta via SetPrimaryPartCFrame + weld manual
-                desyncChair:Destroy(); desyncChair = nil
-                desync_on = false
-                N("DESYNC","Falhou — tente de novo ingame","#FF4444")
-                return
-            end
+        local torso = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
+        if torso then
+            desyncWeld = Instance.new("Weld", desyncChair)
+            desyncWeld.Part0 = desyncChair
+            desyncWeld.Part1 = torso
         end
 
-        setTransparency(character, 0); setHRPTransparency(character, 1)
-
-        if ghostPart then ghostPart:Destroy() end
-        ghostPart = Instance.new("Part")
-        ghostPart.Name        = "NexusDesyncGhost"
-        ghostPart.Size        = Vector3.new(4, 6, 4)
-        ghostPart.Shape       = Enum.PartType.Cylinder
-        ghostPart.CFrame      = origCF * CFrame.Angles(0, 0, math.rad(90))
-        ghostPart.Anchored    = true
-        ghostPart.CanCollide  = false
-        ghostPart.Material    = Enum.Material.ForceField
-        ghostPart.Color       = Color3.fromRGB(140, 50, 255)
-        ghostPart.Transparency = 0
-        ghostPart.CastShadow  = false
-        ghostPart.Parent      = Workspace
-
-        if DesyncBtn then DesyncBtn.Text = "ACTIVE"; DesyncBtn.TextColor3 = Color3.fromRGB(0,255,150) end
-        if DesyncStroke then DesyncStroke.Color = Color3.fromRGB(0,255,150) end
-        N("DESYNC","Fake Position ATIVADO!","#00FF88")
-    else
         local humanoid = character:FindFirstChildOfClass("Humanoid")
         if humanoid then
             pcall(function() humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false) end)
@@ -2108,11 +2160,19 @@ local function ToggleDesync()
                 end
             end)
         end
+
+        setTransparency(character, 0); setHRPTransparency(character, 1)
+        ghostPart = createModernGhost(originalCFrame)
+
+        if DesyncBtn    then DesyncBtn.Text = "ACTIVE"; DesyncBtn.TextColor3 = Color3.fromRGB(0,255,150) end
+        if DesyncStroke then DesyncStroke.Color = Color3.fromRGB(0,255,150) end
+        N("DESYNC","Fake Position ATIVADO!","#00FF88")
+    else
         if desyncChair then desyncChair:Destroy(); desyncChair = nil end
         if ghostPart   then ghostPart:Destroy();   ghostPart   = nil end
         desyncWeld = nil
         setTransparency(character, 0); setHRPTransparency(character, 1)
-        if DesyncBtn   then DesyncBtn.Text = "DESYNC"; DesyncBtn.TextColor3 = Color3.fromRGB(140,50,255) end
+        if DesyncBtn    then DesyncBtn.Text = "DESYNC"; DesyncBtn.TextColor3 = Color3.fromRGB(140,50,255) end
         if DesyncStroke then DesyncStroke.Color = Color3.fromRGB(140,50,255) end
         N("DESYNC","Fake Position DESATIVADO!","#FF4444")
     end
@@ -2136,8 +2196,7 @@ LocalPlayer.CharacterAdded:Connect(function(character)
             v.LocalTransparencyModifier = 0
         end
     end
-    _invisOrigTransparencies = {}
-    InvisActive=false
+        InvisActive=false
     if InvisBtn then InvisBtn.Text="INVISIBLE"; InvisBtn.TextColor3=Color3.fromRGB(140,50,255) end
     if InvisStroke then InvisStroke.Color=Color3.fromRGB(140,50,255) end
 end)
@@ -3877,6 +3936,8 @@ local function ApplyAllConfig()
         InvisBtn.Text       = "INVISIBLE"
         InvisBtn.TextColor3 = Color3.fromRGB(140,50,255)
         InvisStroke.Color   = Color3.fromRGB(140,50,255)
+        -- limpa chair/weld do ghost ao respawn
+        pcall(_invisClean)
     end
 
     -- Auto Farm Coins
