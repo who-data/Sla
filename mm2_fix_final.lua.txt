@@ -18,16 +18,16 @@ local LocalPlayer = Players.LocalPlayer
 local Camera      = workspace.CurrentCamera
 
 -- ============================================================
--- VITA UI LOAD
+-- X2ZU UI LOAD
 -- ============================================================
 local Library = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/noowtf31-ui/Arcylic/refs/heads/main/src.lua.txt"
+    "https://raw.githubusercontent.com/x2zu/OPEN-SOURCE-UI-ROBLOX/refs/heads/main/X2ZU%20UI%20ROBLOX%20OPEN%20SOURCE/DummyUi-leak-by-x2zu/fetching-main/Tools/Framework.luau"
 ))()
 
-local window  -- forward-declared; atribuído logo antes das páginas
+local Window  -- forward-declared
 local function N(title, desc, _color, dur)
-    if window then
-        window:Notify({ Title = title, Description = desc or "", Duration = dur or 3 })
+    if Window then
+        Window:Notify({ Title = title, Desc = desc or "", Time = dur or 3 })
     end
 end
 
@@ -2967,930 +2967,388 @@ local function TeleportToPlayer(mode)
 end
 
 
--- ============================================================
--- ARCYLIC UI — WINDOW
--- ============================================================
-window = Library.new("NEXUS HUB MM2", "NexusHubMM2")
-window:SetToggleKey(Enum.KeyCode.RightControl)
-
-window:Notify({
-    Title       = "NEXUS HUB MM2",
-    Description = "V4.0 carregado! RCtrl para abrir.",
-    Duration    = 5,
-    Icon        = "rbxassetid://10709775704"
-})
 
 -- ============================================================
--- SECTIONS & TABS
+-- X2ZU UI — WINDOW + TABS
 -- ============================================================
-local secCombat = window:CreateSection("Combat")
-local P_Combat  = secCombat:CreateTab("Combat",  "rbxassetid://10723407389")
-local P_ESP     = secCombat:CreateTab("Visuals",  "rbxassetid://10734898355")
+Window = Library:Window({
+    Title = "NEXUS HUB MM2",
+    Desc  = "V4.0 — LeftControl para abrir",
+    Icon  = 105059922903197,
+    Theme = "Dark",
+    Config = {
+        Keybind = Enum.KeyCode.LeftControl,
+        Size    = UDim2.new(0, 560, 0, 420),
+    },
+    CloseUIButton = { Enabled = true, Text = "NEXUS" }
+})
 
-local secPlayer = window:CreateSection("Player")
-local P_Legit   = secPlayer:CreateTab("Legit",   "rbxassetid://10734952644")
-local P_Farm    = secPlayer:CreateTab("Farm",     "rbxassetid://10734959698")
-
-local secMisc   = window:CreateSection("Misc")
-local P_Misc    = secMisc:CreateTab("Misc",      "rbxassetid://10734958149")
-local P_Cfg     = secMisc:CreateTab("Config",    "rbxassetid://10734952173")
+-- Tabs
+local T_Combat = Window:Tab({ Title = "Combat",  Icon = "crosshair" })
+local T_ESP    = Window:Tab({ Title = "Visuals",  Icon = "eye" })
+local T_Legit  = Window:Tab({ Title = "Legit",    Icon = "shield" })
+local T_Farm   = Window:Tab({ Title = "Farm",     Icon = "dollar-sign" })
+local T_Misc   = Window:Tab({ Title = "Misc",     Icon = "settings" })
+local T_Cfg    = Window:Tab({ Title = "Config",   Icon = "save" })
 
 -- ============================================================
--- ABA COMBAT
+-- COMBAT
 -- ============================================================
-P_Combat:CreateSection("LEGIT MODE")
-P_Combat:CreateToggle({
-    Name     = "Legit Mode (1 alvo só)",
-    Default  = Config.KnifeLegitMode,
-    Flag     = "KnifeLegitMode",
-    Callback = function(v) Config.KnifeLegitMode = v; ScheduleSave() end,
-})
+T_Combat:Section({ Title = "LEGIT MODE" })
+T_Combat:Toggle({ Title="Legit Mode (1 alvo só)", Value=Config.KnifeLegitMode, Callback=function(v) Config.KnifeLegitMode=v; ScheduleSave() end })
 
-P_Combat:CreateSection("AUTO SHOOT MURDER")
-P_Combat:CreateToggle({
-    Name     = "Auto Shoot Murder",
-    Default  = Config.AutoShootMurder,
-    Flag     = "AutoShootMurder",
-    Callback = function(v) Config.AutoShootMurder = v; ApplyAutoShootMurder(v); ScheduleSave() end,
-})
-P_Combat:CreateSlider({
-    Name     = "Auto Shoot Range",
-    Min      = 10, Max = 300,
-    Default  = Config.AutoShootRange,
-    Flag     = "AutoShootRange",
-    Callback = function(v) Config.AutoShootRange = v; ScheduleSave() end,
-})
-P_Combat:CreateSlider({
-    Name     = "Auto Shoot Delay (x0.1s)",
-    Min      = 1, Max = 30,
-    Default  = math.floor(Config.AutoShootDelay * 10),
-    Flag     = "AutoShootDelaySlider",
-    Callback = function(v) Config.AutoShootDelay = v / 10; ScheduleSave() end,
-})
+T_Combat:Section({ Title = "AUTO SHOOT MURDER" })
+T_Combat:Toggle({ Title="Auto Shoot Murder", Value=Config.AutoShootMurder, Callback=function(v) Config.AutoShootMurder=v; ApplyAutoShootMurder(v); ScheduleSave() end })
+T_Combat:Slider({ Title="Auto Shoot Range", Min=10, Max=300, Rounding=0, Value=Config.AutoShootRange, Callback=function(v) Config.AutoShootRange=v; ScheduleSave() end })
+T_Combat:Slider({ Title="Auto Shoot Delay (x0.1s)", Min=1, Max=30, Rounding=0, Value=math.floor(Config.AutoShootDelay*10), Callback=function(v) Config.AutoShootDelay=v/10; ScheduleSave() end })
 
-P_Combat:CreateSection("AUTO KILL SHERIFF / HERO")
-P_Combat:CreateToggle({
-    Name     = "Auto Kill Sheriff/Hero",
-    Default  = Config.AutoKillSheriff,
-    Flag     = "AutoKillSheriff",
-    Callback = function(v) Config.AutoKillSheriff = v; ApplyAutoKillSheriff(v); ScheduleSave() end,
-})
-P_Combat:CreateSlider({
-    Name     = "Kill Delay (x0.1s)",
-    Min      = 1, Max = 50,
-    Default  = math.floor(Config.AutoKillSheriffDelay * 10),
-    Flag     = "AutoKillSheriffDelaySlider",
-    Callback = function(v) Config.AutoKillSheriffDelay = v / 10; ScheduleSave() end,
-})
+T_Combat:Section({ Title = "AUTO KILL SHERIFF / HERO" })
+T_Combat:Toggle({ Title="Auto Kill Sheriff/Hero", Value=Config.AutoKillSheriff, Callback=function(v) Config.AutoKillSheriff=v; ApplyAutoKillSheriff(v); ScheduleSave() end })
+T_Combat:Slider({ Title="Kill Delay (x0.1s)", Min=1, Max=50, Rounding=0, Value=math.floor(Config.AutoKillSheriffDelay*10), Callback=function(v) Config.AutoKillSheriffDelay=v/10; ScheduleSave() end })
 
-P_Combat:CreateSection("KNIFE TRIGGERBOT")
-P_Combat:CreateToggle({
-    Name     = "Knife Triggerbot",
-    Default  = Config.KnifeTriggerbot,
-    Flag     = "KnifeTriggerbot",
-    Callback = function(v) Config.KnifeTriggerbot = v; ApplyKnifeTriggerbot(v); ScheduleSave() end,
-})
-P_Combat:CreateSlider({
-    Name     = "Triggerbot Range (st)",
-    Min      = 1, Max = 20,
-    Default  = Config.KnifeTriggerbotDist,
-    Flag     = "KnifeTriggerbotDist",
-    Callback = function(v) Config.KnifeTriggerbotDist = v; ScheduleSave() end,
-})
+T_Combat:Section({ Title = "KNIFE TRIGGERBOT" })
+T_Combat:Toggle({ Title="Knife Triggerbot", Value=Config.KnifeTriggerbot, Callback=function(v) Config.KnifeTriggerbot=v; ApplyKnifeTriggerbot(v); ScheduleSave() end })
+T_Combat:Slider({ Title="Triggerbot Range (st)", Min=1, Max=20, Rounding=0, Value=Config.KnifeTriggerbotDist, Callback=function(v) Config.KnifeTriggerbotDist=v; ScheduleSave() end })
 
-P_Combat:CreateSection("MURDERER — FACA")
-P_Combat:CreateToggle({
-    Name     = "Knife Throwing TP",
-    Default  = Config.KnifeHoming,
-    Flag     = "KnifeHoming",
-    Callback = function(v) Config.KnifeHoming = v; ScheduleSave() end,
-})
-P_Combat:CreateToggle({
-    Name     = "Knife Silent Aim",
-    Default  = Config.KnifeSilentAim,
-    Flag     = "KnifeSilentAim",
-    Callback = function(v)
-        Config.KnifeSilentAim = v; ScheduleSave()
-        if not v then
-            knifeEquipped = false
-        else
-            knifeEquipped = hasKnife(LocalPlayer)
-            if not _knifeToolConn then
-                local function hookChar(char)
-                    char.ChildAdded:Connect(function(item)
-                        if item:IsA("Tool") then
-                            local n = item.Name:lower()
-                            if n:find("knife") or n:find("fac") then knifeEquipped = Config.KnifeSilentAim end
-                        end
-                    end)
-                    char.ChildRemoved:Connect(function(item)
-                        if item:IsA("Tool") then
-                            local n = item.Name:lower()
-                            if n:find("knife") or n:find("fac") then knifeEquipped = false end
-                        end
-                    end)
-                end
-                if LocalPlayer.Character then hookChar(LocalPlayer.Character) end
-                _knifeToolConn = LocalPlayer.CharacterAdded:Connect(hookChar)
+T_Combat:Section({ Title = "MURDERER — FACA" })
+T_Combat:Toggle({ Title="Knife Throwing TP", Value=Config.KnifeHoming, Callback=function(v) Config.KnifeHoming=v; ScheduleSave() end })
+T_Combat:Toggle({ Title="Knife Silent Aim", Value=Config.KnifeSilentAim, Callback=function(v)
+    Config.KnifeSilentAim=v; ScheduleSave()
+    if not v then knifeEquipped=false
+    else
+        knifeEquipped=hasKnife(LocalPlayer)
+        if not _knifeToolConn then
+            local function hookChar(char)
+                char.ChildAdded:Connect(function(item)
+                    if item:IsA("Tool") then local n=item.Name:lower(); if n:find("knife") or n:find("fac") then knifeEquipped=Config.KnifeSilentAim end end
+                end)
+                char.ChildRemoved:Connect(function(item)
+                    if item:IsA("Tool") then local n=item.Name:lower(); if n:find("knife") or n:find("fac") then knifeEquipped=false end end
+                end)
             end
+            if LocalPlayer.Character then hookChar(LocalPlayer.Character) end
+            _knifeToolConn = LocalPlayer.CharacterAdded:Connect(hookChar)
         end
-    end,
-})
-P_Combat:CreateSlider({
-    Name     = "Knife Silent Aim FOV (px)",
-    Min      = 20, Max = 400,
-    Default  = Config.KnifeSilentAimFOV,
-    Flag     = "KnifeSilentAimFOV",
-    Callback = function(v) Config.KnifeSilentAimFOV = v; ScheduleSave() end,
-})
-P_Combat:CreateSlider({
-    Name     = "Throw Trigger Distance (st)",
-    Min      = 1, Max = 100,
-    Default  = Config.KnifeTriggerDist,
-    Flag     = "KnifeTriggerDist",
-    Callback = function(v) Config.KnifeTriggerDist = v; ScheduleSave() end,
-})
-P_Combat:CreateButton({
-    Name     = "KILL ALL (Murderer)",
-    Callback = function() PlayClickSound(); KillAll() end,
-})
+    end
+end })
+T_Combat:Slider({ Title="Knife SA FOV (px)", Min=20, Max=400, Rounding=0, Value=Config.KnifeSilentAimFOV, Callback=function(v) Config.KnifeSilentAimFOV=v; ScheduleSave() end })
+T_Combat:Slider({ Title="Throw Trigger Dist (st)", Min=1, Max=100, Rounding=0, Value=Config.KnifeTriggerDist, Callback=function(v) Config.KnifeTriggerDist=v; ScheduleSave() end })
+T_Combat:Button({ Title="KILL ALL (Murderer)", Callback=function() PlayClickSound(); KillAll() end })
 
-P_Combat:CreateSection("KNIFE AURA")
-P_Combat:CreateToggle({
-    Name     = "Enable Knife Aura",
-    Default  = Config.KnifeAura,
-    Flag     = "KnifeAura",
-    Callback = function(v) Config.KnifeAura = v; ScheduleSave() end,
-})
-P_Combat:CreateSlider({
-    Name     = "Aura Distance (st)",
-    Min      = 1, Max = 50,
-    Default  = Config.KnifeAuraDist,
-    Flag     = "KnifeAuraDist",
-    Callback = function(v) Config.KnifeAuraDist = v; ScheduleSave() end,
-})
+T_Combat:Section({ Title = "KNIFE AURA" })
+T_Combat:Toggle({ Title="Enable Knife Aura", Value=Config.KnifeAura, Callback=function(v) Config.KnifeAura=v; ScheduleSave() end })
+T_Combat:Slider({ Title="Aura Distance (st)", Min=1, Max=50, Rounding=0, Value=Config.KnifeAuraDist, Callback=function(v) Config.KnifeAuraDist=v; ScheduleSave() end })
 
-P_Combat:CreateSection("HITBOX EXPANDER")
-P_Combat:CreateToggle({
-    Name     = "Enable Hitbox Expand",
-    Default  = Config.HitboxExpand,
-    Flag     = "HitboxExpand",
-    Callback = function(v) Config.HitboxExpand = v; ScheduleSave() end,
-})
-P_Combat:CreateSlider({
-    Name     = "Hitbox Size",
-    Min      = 1, Max = 20,
-    Default  = Config.HitboxSize,
-    Flag     = "HitboxSize",
-    Callback = function(v) Config.HitboxSize = v; ScheduleSave() end,
-})
-P_Combat:CreateToggle({
-    Name     = "Visible Hitbox",
-    Default  = Config.HitboxVisible,
-    Flag     = "HitboxVisible",
-    Callback = function(v) Config.HitboxVisible = v; ScheduleSave() end,
-})
+T_Combat:Section({ Title = "HITBOX EXPANDER" })
+T_Combat:Toggle({ Title="Enable Hitbox Expand", Value=Config.HitboxExpand, Callback=function(v) Config.HitboxExpand=v; ScheduleSave() end })
+T_Combat:Slider({ Title="Hitbox Size", Min=1, Max=20, Rounding=0, Value=Config.HitboxSize, Callback=function(v) Config.HitboxSize=v; ScheduleSave() end })
+T_Combat:Toggle({ Title="Visible Hitbox", Value=Config.HitboxVisible, Callback=function(v) Config.HitboxVisible=v; ScheduleSave() end })
 
-P_Combat:CreateSection("DODGE THROW KNIFE")
-P_Combat:CreateToggle({
-    Name     = "Dodge Throw Knife",
-    Default  = Config.DodgeKnife,
-    Flag     = "DodgeKnife",
-    Callback = function(v) Config.DodgeKnife = v; ApplyDodgeKnife(v); ScheduleSave() end,
-})
+T_Combat:Section({ Title = "DODGE / STAB / THROW REACH" })
+T_Combat:Toggle({ Title="Dodge Throw Knife", Value=Config.DodgeKnife, Callback=function(v) Config.DodgeKnife=v; ApplyDodgeKnife(v); ScheduleSave() end })
+T_Combat:Toggle({ Title="Stab Reach", Value=Config.StabReach, Callback=function(v) Config.StabReach=v; ApplyStabReach(v); ScheduleSave() end })
+T_Combat:Slider({ Title="Stab Reach Dist (st)", Min=1, Max=255, Rounding=0, Value=Config.StabReachDist, Callback=function(v) Config.StabReachDist=v; ScheduleSave() end })
+T_Combat:Toggle({ Title="Throw Knife Reach", Value=Config.ThrowKnifeReach, Callback=function(v) Config.ThrowKnifeReach=v; ApplyThrowKnifeReach(v); ScheduleSave() end })
+T_Combat:Slider({ Title="Throw Reach Dist (st)", Min=12, Max=255, Rounding=0, Value=Config.ThrowKnifeReachDist, Callback=function(v) Config.ThrowKnifeReachDist=v; ScheduleSave() end })
 
-P_Combat:CreateSection("STAB REACH")
-P_Combat:CreateToggle({
-    Name     = "Stab Reach",
-    Default  = Config.StabReach,
-    Flag     = "StabReach",
-    Callback = function(v) Config.StabReach = v; ApplyStabReach(v); ScheduleSave() end,
-})
-P_Combat:CreateSlider({
-    Name     = "Stab Reach Distance (st)",
-    Min      = 1, Max = 255,
-    Default  = Config.StabReachDist,
-    Flag     = "StabReachDist",
-    Callback = function(v) Config.StabReachDist = v; ScheduleSave() end,
-})
-
-P_Combat:CreateSection("THROW KNIFE REACH")
-P_Combat:CreateToggle({
-    Name     = "Throw Knife Reach",
-    Default  = Config.ThrowKnifeReach,
-    Flag     = "ThrowKnifeReach",
-    Callback = function(v) Config.ThrowKnifeReach = v; ApplyThrowKnifeReach(v); ScheduleSave() end,
-})
-P_Combat:CreateSlider({
-    Name     = "Throw Reach Distance (st)",
-    Min      = 12, Max = 255,
-    Default  = Config.ThrowKnifeReachDist,
-    Flag     = "ThrowKnifeReachDist",
-    Callback = function(v) Config.ThrowKnifeReachDist = v; ScheduleSave() end,
-})
-
-P_Combat:CreateSection("SHERIFF / HERO — GUN")
-P_Combat:CreateToggle({
-    Name     = "Bullet TP",
-    Default  = Config.BulletTP,
-    Flag     = "BulletTP",
-    Callback = function(v) Config.BulletTP = v; ScheduleSave() end,
-})
-P_Combat:CreateDropdown({
-    Name     = "Bullet TP Mode",
-    Options  = {"End", "Start", "Both"},
-    Default  = Config.BulletTPMode or "End",
-    Flag     = "BulletTPMode",
-    Callback = function(v) Config.BulletTPMode = v; ScheduleSave() end,
-})
-P_Combat:CreateToggle({
-    Name     = "Silent Aim (Botão flutuante)",
-    Default  = Config.SilentAim,
-    Flag     = "SilentAim",
-    Callback = function(v) Config.SilentAim = v; Config.GunSilentAim = v; ShootGui.Enabled = v; ScheduleSave() end,
-})
-P_Combat:CreateToggle({
-    Name     = "Gun Silent Aim (Hook)",
-    Default  = Config.GunSilentAim,
-    Flag     = "GunSilentAim",
-    Callback = function(v) Config.GunSilentAim = v; ScheduleSave() end,
-})
-P_Combat:CreateToggle({
-    Name     = "Ping Compensation",
-    Default  = Config.PingComp,
-    Flag     = "PingComp",
-    Callback = function(v) Config.PingComp = v; ScheduleSave() end,
-})
-P_Combat:CreateSlider({
-    Name     = "Prediction (x0.01s | 0~1s)",
-    Min      = 0, Max = 100,
-    Default  = math.floor(Config.Prediction * 100),
-    Flag     = "PredictionSlider",
-    Callback = function(v) Config.Prediction = v / 100; ScheduleSave() end,
-})
-P_Combat:CreateSlider({
-    Name     = "Offset X Lateral (-1~1st)",
-    Min      = -10, Max = 10,
-    Default  = math.floor(Config.OffsetX * 10),
-    Flag     = "OffsetXSlider",
-    Callback = function(v) Config.OffsetX = v / 10; ScheduleSave() end,
-})
-P_Combat:CreateSlider({
-    Name     = "Offset Y Vertical (-1~1st)",
-    Min      = -10, Max = 10,
-    Default  = math.floor(Config.OffsetY * 10),
-    Flag     = "OffsetYSlider",
-    Callback = function(v) Config.OffsetY = v / 10; ScheduleSave() end,
-})
-P_Combat:CreateSlider({
-    Name     = "Offset Z Profundidade (-1~1st)",
-    Min      = -10, Max = 10,
-    Default  = math.floor(Config.OffsetZ * 10),
-    Flag     = "OffsetZSlider",
-    Callback = function(v) Config.OffsetZ = v / 10; ScheduleSave() end,
-})
-P_Combat:CreateToggle({
-    Name     = "Aim WallCheck",
-    Default  = Config.WallCheck,
-    Flag     = "WallCheck",
-    Callback = function(v) Config.WallCheck = v; ScheduleSave() end,
-})
-P_Combat:CreateToggle({
-    Name     = "Lead Shot (Compensa Ping legado)",
-    Default  = Config.LeadShot,
-    Flag     = "LeadShot",
-    Callback = function(v) Config.LeadShot = v; ScheduleSave() end,
-})
+T_Combat:Section({ Title = "SHERIFF / HERO — GUN" })
+T_Combat:Toggle({ Title="Bullet TP", Value=Config.BulletTP, Callback=function(v) Config.BulletTP=v; ScheduleSave() end })
+T_Combat:Dropdown({ Title="Bullet TP Mode", List={"End","Start","Both"}, Value=Config.BulletTPMode or "End", Callback=function(v) Config.BulletTPMode=v; ScheduleSave() end })
+T_Combat:Toggle({ Title="Silent Aim (Botão flutuante)", Value=Config.SilentAim, Callback=function(v) Config.SilentAim=v; Config.GunSilentAim=v; ShootGui.Enabled=v; ScheduleSave() end })
+T_Combat:Toggle({ Title="Gun Silent Aim (Hook)", Value=Config.GunSilentAim, Callback=function(v) Config.GunSilentAim=v; ScheduleSave() end })
+T_Combat:Toggle({ Title="Ping Compensation", Value=Config.PingComp, Callback=function(v) Config.PingComp=v; ScheduleSave() end })
+T_Combat:Slider({ Title="Prediction (x0.01s)", Min=0, Max=100, Rounding=0, Value=math.floor(Config.Prediction*100), Callback=function(v) Config.Prediction=v/100; ScheduleSave() end })
+T_Combat:Slider({ Title="Offset X Lateral", Min=-10, Max=10, Rounding=0, Value=math.floor(Config.OffsetX*10), Callback=function(v) Config.OffsetX=v/10; ScheduleSave() end })
+T_Combat:Slider({ Title="Offset Y Vertical", Min=-10, Max=10, Rounding=0, Value=math.floor(Config.OffsetY*10), Callback=function(v) Config.OffsetY=v/10; ScheduleSave() end })
+T_Combat:Slider({ Title="Offset Z Profundidade", Min=-10, Max=10, Rounding=0, Value=math.floor(Config.OffsetZ*10), Callback=function(v) Config.OffsetZ=v/10; ScheduleSave() end })
+T_Combat:Toggle({ Title="Aim WallCheck", Value=Config.WallCheck, Callback=function(v) Config.WallCheck=v; ScheduleSave() end })
 
 -- ============================================================
--- ABA VISUALS / ESP
+-- VISUALS / ESP
 -- ============================================================
-P_ESP:CreateSection("NOTIFICAÇÕES")
-P_ESP:CreateToggle({
-    Name     = "Notify Roles (Murd/Sher)",
-    Default  = Config.NotifyRoles,
-    Flag     = "NotifyRoles",
-    Callback = function(v) Config.NotifyRoles = v; ScheduleSave() end,
-})
-P_ESP:CreateToggle({
-    Name     = "Notify Gun Pickup",
-    Default  = Config.NotifyGunPickup,
-    Flag     = "NotifyGunPickup",
-    Callback = function(v) Config.NotifyGunPickup = v; ScheduleSave() end,
-})
-P_ESP:CreateToggle({
-    Name     = "Notify Gun Drop",
-    Default  = Config.NotifyGunDrop,
-    Flag     = "NotifyGunDrop",
-    Callback = function(v) Config.NotifyGunDrop = v; ScheduleSave() end,
-})
+T_ESP:Section({ Title = "NOTIFICAÇÕES" })
+T_ESP:Toggle({ Title="Notify Roles", Value=Config.NotifyRoles, Callback=function(v) Config.NotifyRoles=v; ScheduleSave() end })
+T_ESP:Toggle({ Title="Notify Gun Pickup", Value=Config.NotifyGunPickup, Callback=function(v) Config.NotifyGunPickup=v; ScheduleSave() end })
+T_ESP:Toggle({ Title="Notify Gun Drop", Value=Config.NotifyGunDrop, Callback=function(v) Config.NotifyGunDrop=v; ScheduleSave() end })
 
-P_ESP:CreateSection("MURDERER (Vermelho)")
-P_ESP:CreateToggle({ Name="Murder Fill",    Default=Config.Murder_Fill,    Flag="Murder_Fill",    Callback=function(v) Config.Murder_Fill=v;    ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Murder Outline", Default=Config.Murder_Outline, Flag="Murder_Outline", Callback=function(v) Config.Murder_Outline=v; ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Murder Tracer",  Default=Config.Murder_Tracer,  Flag="Murder_Tracer",  Callback=function(v) Config.Murder_Tracer=v;  ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Murder Name",    Default=Config.Murder_Name,    Flag="Murder_Name",    Callback=function(v) Config.Murder_Name=v;    ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Murder Distance",Default=Config.Murder_Dist,    Flag="Murder_Dist",    Callback=function(v) Config.Murder_Dist=v;    ScheduleSave() end })
+T_ESP:Section({ Title = "MURDERER (Vermelho)" })
+T_ESP:Toggle({ Title="Murder Fill",     Value=Config.Murder_Fill,    Callback=function(v) Config.Murder_Fill=v;    ScheduleSave() end })
+T_ESP:Toggle({ Title="Murder Outline",  Value=Config.Murder_Outline, Callback=function(v) Config.Murder_Outline=v; ScheduleSave() end })
+T_ESP:Toggle({ Title="Murder Tracer",   Value=Config.Murder_Tracer,  Callback=function(v) Config.Murder_Tracer=v;  ScheduleSave() end })
+T_ESP:Toggle({ Title="Murder Name",     Value=Config.Murder_Name,    Callback=function(v) Config.Murder_Name=v;    ScheduleSave() end })
+T_ESP:Toggle({ Title="Murder Distance", Value=Config.Murder_Dist,    Callback=function(v) Config.Murder_Dist=v;    ScheduleSave() end })
 
-P_ESP:CreateSection("SHERIFF (Azul)")
-P_ESP:CreateToggle({ Name="Sheriff Fill",    Default=Config.Sheriff_Fill,    Flag="Sheriff_Fill",    Callback=function(v) Config.Sheriff_Fill=v;    ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Sheriff Outline", Default=Config.Sheriff_Outline, Flag="Sheriff_Outline", Callback=function(v) Config.Sheriff_Outline=v; ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Sheriff Tracer",  Default=Config.Sheriff_Tracer,  Flag="Sheriff_Tracer",  Callback=function(v) Config.Sheriff_Tracer=v;  ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Sheriff Name",    Default=Config.Sheriff_Name,    Flag="Sheriff_Name",    Callback=function(v) Config.Sheriff_Name=v;    ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Sheriff Distance",Default=Config.Sheriff_Dist,    Flag="Sheriff_Dist",    Callback=function(v) Config.Sheriff_Dist=v;    ScheduleSave() end })
+T_ESP:Section({ Title = "SHERIFF (Azul)" })
+T_ESP:Toggle({ Title="Sheriff Fill",     Value=Config.Sheriff_Fill,    Callback=function(v) Config.Sheriff_Fill=v;    ScheduleSave() end })
+T_ESP:Toggle({ Title="Sheriff Outline",  Value=Config.Sheriff_Outline, Callback=function(v) Config.Sheriff_Outline=v; ScheduleSave() end })
+T_ESP:Toggle({ Title="Sheriff Tracer",   Value=Config.Sheriff_Tracer,  Callback=function(v) Config.Sheriff_Tracer=v;  ScheduleSave() end })
+T_ESP:Toggle({ Title="Sheriff Name",     Value=Config.Sheriff_Name,    Callback=function(v) Config.Sheriff_Name=v;    ScheduleSave() end })
+T_ESP:Toggle({ Title="Sheriff Distance", Value=Config.Sheriff_Dist,    Callback=function(v) Config.Sheriff_Dist=v;    ScheduleSave() end })
 
-P_ESP:CreateSection("HERO (Amarelo)")
-P_ESP:CreateToggle({ Name="Hero Fill",    Default=Config.Hero_Fill,    Flag="Hero_Fill",    Callback=function(v) Config.Hero_Fill=v;    ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Hero Outline", Default=Config.Hero_Outline, Flag="Hero_Outline", Callback=function(v) Config.Hero_Outline=v; ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Hero Tracer",  Default=Config.Hero_Tracer,  Flag="Hero_Tracer",  Callback=function(v) Config.Hero_Tracer=v;  ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Hero Name",    Default=Config.Hero_Name,    Flag="Hero_Name",    Callback=function(v) Config.Hero_Name=v;    ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Hero Distance",Default=Config.Hero_Dist,    Flag="Hero_Dist",    Callback=function(v) Config.Hero_Dist=v;    ScheduleSave() end })
+T_ESP:Section({ Title = "HERO (Amarelo)" })
+T_ESP:Toggle({ Title="Hero Fill",     Value=Config.Hero_Fill,    Callback=function(v) Config.Hero_Fill=v;    ScheduleSave() end })
+T_ESP:Toggle({ Title="Hero Outline",  Value=Config.Hero_Outline, Callback=function(v) Config.Hero_Outline=v; ScheduleSave() end })
+T_ESP:Toggle({ Title="Hero Tracer",   Value=Config.Hero_Tracer,  Callback=function(v) Config.Hero_Tracer=v;  ScheduleSave() end })
+T_ESP:Toggle({ Title="Hero Name",     Value=Config.Hero_Name,    Callback=function(v) Config.Hero_Name=v;    ScheduleSave() end })
+T_ESP:Toggle({ Title="Hero Distance", Value=Config.Hero_Dist,    Callback=function(v) Config.Hero_Dist=v;    ScheduleSave() end })
 
-P_ESP:CreateSection("INNOCENT (Verde)")
-P_ESP:CreateToggle({ Name="Innocent Fill",    Default=Config.Innocent_Fill,    Flag="Innocent_Fill",    Callback=function(v) Config.Innocent_Fill=v;    ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Innocent Outline", Default=Config.Innocent_Outline, Flag="Innocent_Outline", Callback=function(v) Config.Innocent_Outline=v; ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Innocent Tracer",  Default=Config.Innocent_Tracer,  Flag="Innocent_Tracer",  Callback=function(v) Config.Innocent_Tracer=v;  ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Innocent Name",    Default=Config.Innocent_Name,    Flag="Innocent_Name",    Callback=function(v) Config.Innocent_Name=v;    ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Innocent Distance",Default=Config.Innocent_Dist,    Flag="Innocent_Dist",    Callback=function(v) Config.Innocent_Dist=v;    ScheduleSave() end })
+T_ESP:Section({ Title = "INNOCENT (Verde)" })
+T_ESP:Toggle({ Title="Innocent Fill",     Value=Config.Innocent_Fill,    Callback=function(v) Config.Innocent_Fill=v;    ScheduleSave() end })
+T_ESP:Toggle({ Title="Innocent Outline",  Value=Config.Innocent_Outline, Callback=function(v) Config.Innocent_Outline=v; ScheduleSave() end })
+T_ESP:Toggle({ Title="Innocent Tracer",   Value=Config.Innocent_Tracer,  Callback=function(v) Config.Innocent_Tracer=v;  ScheduleSave() end })
+T_ESP:Toggle({ Title="Innocent Name",     Value=Config.Innocent_Name,    Callback=function(v) Config.Innocent_Name=v;    ScheduleSave() end })
+T_ESP:Toggle({ Title="Innocent Distance", Value=Config.Innocent_Dist,    Callback=function(v) Config.Innocent_Dist=v;    ScheduleSave() end })
 
-P_ESP:CreateSection("LOBBY / MORTO (Cinza)")
-P_ESP:CreateToggle({ Name="Lobby Fill",    Default=Config.Lobby_Fill,    Flag="Lobby_Fill",    Callback=function(v) Config.Lobby_Fill=v;    ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Lobby Outline", Default=Config.Lobby_Outline, Flag="Lobby_Outline", Callback=function(v) Config.Lobby_Outline=v; ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Lobby Tracer",  Default=Config.Lobby_Tracer,  Flag="Lobby_Tracer",  Callback=function(v) Config.Lobby_Tracer=v;  ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Lobby Name",    Default=Config.Lobby_Name,    Flag="Lobby_Name",    Callback=function(v) Config.Lobby_Name=v;    ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Lobby Distance",Default=Config.Lobby_Dist,    Flag="Lobby_Dist",    Callback=function(v) Config.Lobby_Dist=v;    ScheduleSave() end })
+T_ESP:Section({ Title = "LOBBY / MORTO (Cinza)" })
+T_ESP:Toggle({ Title="Lobby Fill",     Value=Config.Lobby_Fill,    Callback=function(v) Config.Lobby_Fill=v;    ScheduleSave() end })
+T_ESP:Toggle({ Title="Lobby Outline",  Value=Config.Lobby_Outline, Callback=function(v) Config.Lobby_Outline=v; ScheduleSave() end })
+T_ESP:Toggle({ Title="Lobby Tracer",   Value=Config.Lobby_Tracer,  Callback=function(v) Config.Lobby_Tracer=v;  ScheduleSave() end })
+T_ESP:Toggle({ Title="Lobby Name",     Value=Config.Lobby_Name,    Callback=function(v) Config.Lobby_Name=v;    ScheduleSave() end })
+T_ESP:Toggle({ Title="Lobby Distance", Value=Config.Lobby_Dist,    Callback=function(v) Config.Lobby_Dist=v;    ScheduleSave() end })
 
-P_ESP:CreateSection("GUN DROP (Branco)")
-P_ESP:CreateToggle({ Name="Gun Fill",    Default=Config.Gun_Fill,    Flag="Gun_Fill",    Callback=function(v) Config.Gun_Fill=v;    ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Gun Outline", Default=Config.Gun_Outline, Flag="Gun_Outline", Callback=function(v) Config.Gun_Outline=v; ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Gun Tracer",  Default=Config.Gun_Tracer,  Flag="Gun_Tracer",  Callback=function(v) Config.Gun_Tracer=v;  ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Gun Name",    Default=Config.Gun_Name,    Flag="Gun_Name",    Callback=function(v) Config.Gun_Name=v;    ScheduleSave() end })
-P_ESP:CreateToggle({ Name="Gun Distance",Default=Config.Gun_Dist,    Flag="Gun_Dist",    Callback=function(v) Config.Gun_Dist=v;    ScheduleSave() end })
+T_ESP:Section({ Title = "GUN DROP (Branco)" })
+T_ESP:Toggle({ Title="Gun Fill",     Value=Config.Gun_Fill,    Callback=function(v) Config.Gun_Fill=v;    ScheduleSave() end })
+T_ESP:Toggle({ Title="Gun Outline",  Value=Config.Gun_Outline, Callback=function(v) Config.Gun_Outline=v; ScheduleSave() end })
+T_ESP:Toggle({ Title="Gun Tracer",   Value=Config.Gun_Tracer,  Callback=function(v) Config.Gun_Tracer=v;  ScheduleSave() end })
+T_ESP:Toggle({ Title="Gun Name",     Value=Config.Gun_Name,    Callback=function(v) Config.Gun_Name=v;    ScheduleSave() end })
+T_ESP:Toggle({ Title="Gun Distance", Value=Config.Gun_Dist,    Callback=function(v) Config.Gun_Dist=v;    ScheduleSave() end })
 
-P_ESP:CreateSection("TRANSPARÊNCIAS")
-P_ESP:CreateSlider({
-    Name     = "Fill Transparency (x0.01)",
-    Min      = 0, Max = 100,
-    Default  = math.floor(Config.FillTransparency * 100),
-    Flag     = "FillTransparencySlider",
-    Callback = function(v) Config.FillTransparency = v / 100; ScheduleSave() end,
-})
-P_ESP:CreateSlider({
-    Name     = "Outline Transparency (x0.01)",
-    Min      = 0, Max = 100,
-    Default  = math.floor(Config.OutlineTransparency * 100),
-    Flag     = "OutlineTransparencySlider",
-    Callback = function(v) Config.OutlineTransparency = v / 100; ScheduleSave() end,
-})
+T_ESP:Section({ Title = "TRANSPARÊNCIAS" })
+T_ESP:Slider({ Title="Fill Transparency (x0.01)", Min=0, Max=100, Rounding=0, Value=math.floor(Config.FillTransparency*100), Callback=function(v) Config.FillTransparency=v/100; ScheduleSave() end })
+T_ESP:Slider({ Title="Outline Transparency (x0.01)", Min=0, Max=100, Rounding=0, Value=math.floor(Config.OutlineTransparency*100), Callback=function(v) Config.OutlineTransparency=v/100; ScheduleSave() end })
 
 -- ============================================================
--- ABA LEGIT / PLAYER
+-- LEGIT
 -- ============================================================
-P_Legit:CreateSection("FAKE LAG / DESYNC")
-P_Legit:CreateToggle({
-    Name     = "Enable Desync",
-    Default  = Config.DesyncEnabled,
-    Flag     = "DesyncEnabled",
-    Callback = function(v)
-        Config.DesyncEnabled = v
-        if not v and desync_on then ToggleDesync() end
-        ScheduleSave()
-    end,
-})
-P_Legit:CreateToggle({
-    Name     = "Mostrar Botão Desync",
-    Default  = Config.ShowDesyncBtn,
-    Flag     = "ShowDesyncBtn",
-    Callback = function(v) Config.ShowDesyncBtn = v; DesyncFrame.Visible = v; SaveConfig() end,
-})
-P_Legit:CreateButton({
-    Name     = "TOGGLE DESYNC",
-    Callback = function() ToggleDesync() end,
-})
+T_Legit:Section({ Title = "FAKE LAG / DESYNC" })
+T_Legit:Toggle({ Title="Enable Desync", Value=Config.DesyncEnabled, Callback=function(v) Config.DesyncEnabled=v; if not v and desync_on then ToggleDesync() end; ScheduleSave() end })
+T_Legit:Toggle({ Title="Mostrar Botão Desync", Value=Config.ShowDesyncBtn, Callback=function(v) Config.ShowDesyncBtn=v; DesyncFrame.Visible=v; SaveConfig() end })
+T_Legit:Button({ Title="TOGGLE DESYNC", Callback=function() ToggleDesync() end })
 
-P_Legit:CreateSection("FLING")
-P_Legit:CreateButton({ Name="Fling Sheriff",  Callback=function() ToggleFling("Sheriff")  end })
-P_Legit:CreateButton({ Name="Fling Murderer", Callback=function() ToggleFling("Murderer") end })
-P_Legit:CreateButton({ Name="Fling Hero",     Callback=function() ToggleFling("Hero")     end })
-P_Legit:CreateButton({ Name="Fling ALL",      Callback=function() ToggleFlingAll()        end })
-P_Legit:CreateButton({
-    Name     = "STOP FLING",
-    Callback = function() StopFling(); N("FLING","Fling parado!","#FFA500") end,
-})
+T_Legit:Section({ Title = "FLING" })
+T_Legit:Button({ Title="Fling Sheriff",  Callback=function() ToggleFling("Sheriff")  end })
+T_Legit:Button({ Title="Fling Murderer", Callback=function() ToggleFling("Murderer") end })
+T_Legit:Button({ Title="Fling Hero",     Callback=function() ToggleFling("Hero")     end })
+T_Legit:Button({ Title="Fling ALL",      Callback=function() ToggleFlingAll()        end })
+T_Legit:Button({ Title="STOP FLING",     Callback=function() StopFling(); N("FLING","Fling parado!") end })
 
-P_Legit:CreateSection("FLING JOGADOR ESPECÍFICO")
+T_Legit:Section({ Title = "FLING JOGADOR ESPECÍFICO" })
 local _flingSelectedPlayer = ""
-P_Legit:CreateDropdown({
-    Name     = "Selecionar Jogador",
-    Options  = (function()
-        local list = {}
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer then table.insert(list, p.Name) end
-        end
-        return list
-    end)(),
-    Default  = "",
-    Flag     = "flingPlayerDrop",
-    Callback = function(v) _flingSelectedPlayer = v end,
+local flingDrop = T_Legit:Dropdown({
+    Title    = "Selecionar Jogador",
+    List     = (function() local l={} for _,p in ipairs(Players:GetPlayers()) do if p~=LocalPlayer then l[#l+1]=p.Name end end return l end)(),
+    Value    = "",
+    Callback = function(v) _flingSelectedPlayer=v end,
 })
 Players.PlayerAdded:Connect(function(p)
-    -- Arcylic dropdown não expõe AddList; rebuild não é necessário
-    -- jogador aparecerá na próxima abertura do hub
+    pcall(function() flingDrop:AddItem(p.Name) end)
 end)
-P_Legit:CreateButton({
-    Name     = "FLING SELECIONADO",
-    Callback = function()
-        if _flingSelectedPlayer ~= "" then ToggleFlingPlayer(_flingSelectedPlayer)
-        else N("FLING","Selecione um jogador primeiro!","#FFA500") end
-    end,
-})
-
-P_Legit:CreateSection("PROTEÇÃO")
-P_Legit:CreateToggle({
-    Name     = "Anti-Fling",
-    Default  = Config.AntiFling,
-    Flag     = "AntiFling",
-    Callback = function(v) Config.AntiFling = v; ScheduleSave() end,
-})
-P_Legit:CreateToggle({
-    Name     = "Second Life (Godmode)",
-    Default  = Config.SecondLife,
-    Flag     = "SecondLife",
-    Callback = function(v) Config.SecondLife = v; ApplySecondLife(v); ScheduleSave() end,
-})
-
-P_Legit:CreateSection("PRANK BOMB")
-P_Legit:CreateToggle({
-    Name     = "Auto Prank Bomb",
-    Default  = Config.AutoPrankBomb,
-    Flag     = "AutoPrankBomb",
-    Callback = function(v) Config.AutoPrankBomb = v; ApplyAutoPrankBomb(v); ScheduleSave() end,
-})
-
-P_Legit:CreateSection("AUTO GRAB GUN")
-P_Legit:CreateToggle({
-    Name     = "Auto Grab Gun",
-    Default  = Config.AutoGrabGun,
-    Flag     = "AutoGrabGun",
-    Callback = function(v)
-        Config.AutoGrabGun = v
-        if getgenv()._nexusSetupAutoGrab then getgenv()._nexusSetupAutoGrab() end
-        ScheduleSave()
-    end,
-})
-P_Legit:CreateToggle({
-    Name     = "Mostrar Botão Grab",
-    Default  = Config.ShowGrabBtn,
-    Flag     = "ShowGrabBtn",
-    Callback = function(v) Config.ShowGrabBtn = v; GrabFrame.Visible = v; SaveConfig() end,
-})
-P_Legit:CreateButton({
-    Name     = "FORCE GRAB GUN",
-    Callback = function() PerformGrabGun() end,
-})
-P_Legit:CreateSlider({
-    Name     = "Grab Distance (st)",
-    Min      = 1, Max = 100,
-    Default  = Config.GrabDistance,
-    Flag     = "GrabDistance",
-    Callback = function(v) Config.GrabDistance = v; ScheduleSave() end,
-})
-
-P_Legit:CreateSection("GHOST / INVISIBLE")
-P_Legit:CreateToggle({
-    Name     = "Mostrar Botão Invisible",
-    Default  = Config.ShowInvisBtn,
-    Flag     = "ShowInvisBtn",
-    Callback = function(v) Config.ShowInvisBtn = v; InvisFrame.Visible = v; SaveConfig() end,
-})
-P_Legit:CreateButton({
-    Name     = "TOGGLE INVISIBLE",
-    Callback = function() ToggleInvis() end,
-})
-
-P_Legit:CreateSection("TELEPORT")
-P_Legit:CreateButton({
-    Name     = "TP TO MAP",
-    Callback = function()
-        PlayClickSound()
-        local function getMap()
-            for _, o in ipairs(workspace:GetChildren()) do
-                if o:FindFirstChild("CoinContainer") and o:FindFirstChild("Spawns") then return o end
-            end
-        end
-        local map = getMap()
-        if not map then N("TP","Mapa não encontrado!","#FF4444"); return end
-        local spawns = map:FindFirstChild("Spawns")
-        if not spawns then N("TP","Sem spawns!","#FF4444"); return end
-        local pts = spawns:GetChildren()
-        if #pts == 0 then N("TP","Sem pontos de spawn!","#FF4444"); return end
-        local sp = pts[math.random(1,#pts)]
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character:MoveTo(sp.Position)
-            N("TP","Teleportado para o mapa!","#00AAFF")
-        end
-    end,
-})
-P_Legit:CreateDropdown({
-    Name     = "Teleport to Role",
-    Options  = {"Sheriff", "Murderer", "Hero"},
-    Default  = "Sheriff",
-    Flag     = "TpRoleDrop",
-    Callback = function(v) PlayClickSound(); TeleportToRole(v) end,
-})
-P_Legit:CreateDropdown({
-    Name     = "Teleport to Player",
-    Options  = {"Closest Player", "Random Player"},
-    Default  = "Closest Player",
-    Flag     = "TpPlayerDrop",
-    Callback = function(v) PlayClickSound(); TeleportToPlayer(v) end,
-})
-
-P_Legit:CreateSection("MOVEMENT MODS")
-P_Legit:CreateToggle({
-    Name     = "Enable WalkSpeed",
-    Default  = Config.WalkSpeedEnabled,
-    Flag     = "WalkSpeedEnabled",
-    Callback = function(v) Config.WalkSpeedEnabled = v; ScheduleSave() end,
-})
-P_Legit:CreateSlider({
-    Name     = "WalkSpeed Value",
-    Min      = 16, Max = 100,
-    Default  = Config.WalkSpeedValue,
-    Flag     = "WalkSpeedValue",
-    Callback = function(v) Config.WalkSpeedValue = v; ScheduleSave() end,
-})
-P_Legit:CreateToggle({
-    Name     = "Enable JumpPower",
-    Default  = Config.JumpPowerEnabled,
-    Flag     = "JumpPowerEnabled",
-    Callback = function(v) Config.JumpPowerEnabled = v; ScheduleSave() end,
-})
-P_Legit:CreateSlider({
-    Name     = "JumpPower Value",
-    Min      = 50, Max = 300,
-    Default  = Config.JumpPowerValue,
-    Flag     = "JumpPowerValue",
-    Callback = function(v) Config.JumpPowerValue = v; ScheduleSave() end,
-})
-
-P_Legit:CreateSection("SPEED GLITCH")
-P_Legit:CreateDropdown({
-    Name     = "Speed Glitch Mode",
-    Options  = {"With Item", "No Item"},
-    Default  = Config.SpeedGlitchMode,
-    Flag     = "SpeedGlitchMode",
-    Callback = function(v) Config.SpeedGlitchMode = v; ScheduleSave() end,
-})
-P_Legit:CreateSlider({
-    Name     = "Speed Glitch Power",
-    Min      = 1, Max = 320,
-    Default  = Config.SpeedGlitchPower,
-    Flag     = "SpeedGlitchPower",
-    Callback = function(v) Config.SpeedGlitchPower = v; ScheduleSave() end,
-})
-P_Legit:CreateToggle({
-    Name     = "Enable Speed Glitch",
-    Default  = Config.SpeedGlitch,
-    Flag     = "SpeedGlitch",
-    Callback = function(v) Config.SpeedGlitch = v; ApplySpeedGlitch(v); ScheduleSave() end,
-})
-
--- ============================================================
--- ABA AUTO FARM
--- ============================================================
-P_Farm:CreateSection("COINS REACH")
-P_Farm:CreateToggle({
-    Name     = "Coins Reach (4x Size)",
-    Default  = Config.CoinsReach,
-    Flag     = "CoinsReach",
-    Callback = function(v)
-        Config.CoinsReach = v
-        if v then
-            coinOrig = {}
-            for _, obj in pairs(Workspace:GetDescendants()) do
-                if obj.Name == "Coin_Server" and obj:IsA("BasePart") then
-                    coinOrig[obj] = obj.Size; obj.Size = coinOrig[obj] * 4
-                end
-            end
-            coinReachConn = Workspace.DescendantAdded:Connect(function(obj)
-                if obj.Name == "Coin_Server" and obj:IsA("BasePart") then
-                    coinOrig[obj] = obj.Size; obj.Size = coinOrig[obj] * 4
-                end
-            end)
-        else
-            for obj, orig in pairs(coinOrig) do if obj and obj.Parent then obj.Size = orig end end
-            if coinReachConn then coinReachConn:Disconnect(); coinReachConn = nil end
-            coinOrig = {}
-        end
-        ScheduleSave()
-    end,
-})
-P_Farm:CreateToggle({
-    Name     = "Coins Remove",
-    Default  = Config.CoinsRemove,
-    Flag     = "CoinsRemove",
-    Callback = function(v) Config.CoinsRemove = v; ApplyCoinsRemove(v); ScheduleSave() end,
-})
-P_Farm:CreateToggle({
-    Name     = "Optimizer Coins",
-    Default  = Config.OptimizerCoins,
-    Flag     = "OptimizerCoins",
-    Callback = function(v) Config.OptimizerCoins = v; ApplyOptimizerCoins(v); ScheduleSave() end,
-})
-
-P_Farm:CreateSection("AUTO FARM COINS")
-P_Farm:CreateToggle({
-    Name     = "Auto Farm Coins",
-    Default  = Config.AutoFarmCoins,
-    Flag     = "AutoFarmCoins",
-    Callback = function(v)
-        Config.AutoFarmCoins = v
-        if v then
-            autoFarmCoinsRunning = true
-            autoFarmCoinsThread  = task.spawn(AutoFarmCoinsFunc)
-        else
-            autoFarmCoinsRunning = false
-            if autoFarmCoinsThread then task.cancel(autoFarmCoinsThread); autoFarmCoinsThread = nil end
-        end
-        ScheduleSave()
-    end,
-})
-P_Farm:CreateButton({
-    Name     = "FORCE STOP FARM",
-    Callback = function()
-        autoFarmCoinsRunning = false; Config.AutoFarmCoins = false
-        if autoFarmCoinsThread then task.cancel(autoFarmCoinsThread); autoFarmCoinsThread = nil end
-        N("FARM","Farm parado!","#FF4444")
-    end,
-})
-
-P_Farm:CreateSection("TWEEN AUTO FARM (MM2)")
-P_Farm:CreateToggle({
-    Name     = "Tween Auto Farm",
-    Default  = Config.TweenAutoFarm,
-    Flag     = "TweenAutoFarm",
-    Callback = function(v)
-        Config.TweenAutoFarm = v; TweenAutoFarmEnabled = v
-        if v then
-            tweenVisited = {}; tweenCurrentContainer = nil; TweenFarm_CreateFloat()
-        else
-            if TweenFloatPart then TweenFloatPart:Destroy(); TweenFloatPart = nil end
-            tweenVisited = {}
-        end
-        ScheduleSave()
-    end,
-})
-P_Farm:CreateToggle({
-    Name     = "Reset Bag When Full",
-    Default  = Config.TweenResetBag,
-    Flag     = "TweenResetBag",
-    Callback = function(v) Config.TweenResetBag = v; ScheduleSave() end,
-})
-P_Farm:CreateToggle({
-    Name     = "Random Coin",
-    Default  = Config.TweenRandomCoin,
-    Flag     = "TweenRandomCoin",
-    Callback = function(v) Config.TweenRandomCoin = v; ScheduleSave() end,
-})
-P_Farm:CreateSlider({
-    Name     = "Tween Speed",
-    Min      = 1, Max = 30,
-    Default  = Config.TweenSpeed,
-    Flag     = "TweenSpeed",
-    Callback = function(v) Config.TweenSpeed = v; ScheduleSave() end,
-})
-P_Farm:CreateSlider({
-    Name     = "Coin Delay (x0.1s)",
-    Min      = 0, Max = 50,
-    Default  = Config.TweenCoinDelay,
-    Flag     = "TweenCoinDelay",
-    Callback = function(v) Config.TweenCoinDelay = v; ScheduleSave() end,
-})
-P_Farm:CreateDropdown({
-    Name     = "Farm Mode",
-    Options  = {"Normal", "Below the map"},
-    Default  = Config.TweenFarmMode,
-    Flag     = "TweenFarmMode",
-    Callback = function(v) Config.TweenFarmMode = v; ScheduleSave() end,
-})
-
-P_Farm:CreateSection("TWEEN FARM — AÇÕES (Bag Full)")
-P_Farm:CreateToggle({
-    Name     = "Kill Murder (Bag Full)",
-    Default  = Config.TweenKillSheriff,
-    Flag     = "TweenKillSheriff",
-    Callback = function(v)
-        Config.TweenKillSheriff = v
-        if v then TweenKillSheriff_Stop(); tweenKillSheriffThread = task.spawn(TweenKillSheriff_Loop)
-        else TweenKillSheriff_Stop() end
-        ScheduleSave()
-    end,
-})
-P_Farm:CreateToggle({
-    Name     = "Kill All (Bag Full + Murderer)",
-    Default  = Config.TweenKillAll,
-    Flag     = "TweenKillAll",
-    Callback = function(v)
-        Config.TweenKillAll = v
-        if v then TweenKillAll_Stop(); tweenKillAllThread = task.spawn(TweenKillAll_Loop)
-        else TweenKillAll_Stop() end
-        ScheduleSave()
-    end,
-})
-P_Farm:CreateToggle({
-    Name     = "Fling Murder (Bag Full + Inocente)",
-    Default  = Config.TweenFlingMurder,
-    Flag     = "TweenFlingMurder",
-    Callback = function(v)
-        Config.TweenFlingMurder = v
-        if v then TweenFlingMurder_Stop(); tweenFlingMurderThread = task.spawn(TweenFlingMurder_Loop)
-        else TweenFlingMurder_Stop(); StopFling() end
-        ScheduleSave()
-    end,
-})
-
--- ============================================================
--- ABA MISC
--- ============================================================
-P_Misc:CreateSection("MISC")
-P_Misc:CreateToggle({
-    Name     = "Instant Role (Show Alert)",
-    Default  = Config.InstantRole,
-    Flag     = "InstantRole",
-    Callback = function(v) Config.InstantRole = v; ScheduleSave() end,
-})
-P_Misc:CreateToggle({
-    Name     = "Anti-Lag (Desativa Sombras)",
-    Default  = Config.AntiLag,
-    Flag     = "AntiLag",
-    Callback = function(v)
-        Config.AntiLag = v
-        if v then Lighting.GlobalShadows = false; Lighting.ShadowSoftness = 0
-        else Lighting.GlobalShadows = true end
-        ScheduleSave()
-    end,
-})
-P_Misc:CreateToggle({
-    Name     = "Disable Footstep",
-    Default  = Config.DisableFootstep,
-    Flag     = "DisableFootstep",
-    Callback = function(v) Config.DisableFootstep = v; ApplyDisableFootstep(v); ScheduleSave() end,
-})
-P_Misc:CreateToggle({
-    Name     = "Show Round Timer",
-    Default  = Config.ShowRoundTimer,
-    Flag     = "ShowRoundTimer",
-    Callback = function(v) Config.ShowRoundTimer = v; ApplyShowRoundTimer(v); ScheduleSave() end,
-})
-
-P_Misc:CreateSection("ANTI BANG & SNITCH")
-P_Misc:CreateButton({
-    Name     = "Anti Bang",
-    Callback = function()
-        PlayClickSound()
-        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if not hrp then N("ANTI BANG","Sem personagem!","#FF4444"); return end
-        local last = hrp.CFrame
-        local origH = workspace.FallenPartsDestroyHeight
-        workspace.FallenPartsDestroyHeight = -1000
-        hrp.CFrame = CFrame.new(Vector3.new(0,-500,0))
-        task.wait(0.7)
-        hrp.CFrame = last
-        workspace.FallenPartsDestroyHeight = origH
-        N("ANTI BANG","Feito!","#00FF88")
-    end,
-})
-P_Misc:CreateButton({
-    Name     = "Chat Snitch",
-    Callback = function()
-        PlayClickSound()
-        local ok, data = pcall(function()
-            local remote = ReplicatedStorage:FindFirstChild("GetPlayerData", true)
-            if remote then return remote:InvokeServer() end
-        end)
-        if not ok or not data then N("SNITCH","Falhou em obter dados!","#FF4444"); return end
-        local sheriff, murderer
-        for name, role in pairs(data) do
-            if type(role) == "table" then
-                if role.Role == "Murderer" then murderer = name
-                elseif role.Role == "Sheriff" then sheriff = name end
-            end
-        end
-        local TCS = game:GetService("TextChatService")
-        local ch  = TCS and TCS.TextChannels and TCS.TextChannels:FindFirstChild("RBXGeneral")
-        if ch then
-            if sheriff and murderer then
-                pcall(function() ch:SendAsync(sheriff.." is the Sheriff and "..murderer.." is the Murderer.") end)
-            elseif murderer then
-                pcall(function() ch:SendAsync(murderer.." is the Murderer.") end)
-            elseif sheriff then
-                pcall(function() ch:SendAsync(sheriff.." is the Sheriff.") end)
-            else N("SNITCH","Nenhum papel detectado!","#FFA500"); return end
-            N("SNITCH","Enviado no chat!","#00FF88")
-        else N("SNITCH","TextChatService não encontrado!","#FF4444") end
-    end,
-})
-
-P_Misc:CreateSection("TRAP SYSTEM")
-P_Misc:CreateToggle({
-    Name     = "Remove Traps",
-    Default  = Config.RemoveTrap,
-    Flag     = "RemoveTrap",
-    Callback = function(v)
-        Config.RemoveTrap = v
-        if v then Config.SeeTrap = false end
-        Trap_UpdateAll(); ScheduleSave()
-    end,
-})
-P_Misc:CreateToggle({
-    Name     = "See Traps (ESP)",
-    Default  = Config.SeeTrap,
-    Flag     = "SeeTrap",
-    Callback = function(v)
-        Config.SeeTrap = v
-        if not v then Trap_ClearLabels() end
-        Trap_UpdateAll(); ScheduleSave()
-    end,
-})
-
-P_Misc:CreateSection("MUTE RADIOS")
-P_Misc:CreateToggle({
-    Name     = "Mute Radios",
-    Default  = Config.MuteRadios,
-    Flag     = "MuteRadios",
-    Callback = function(v) Config.MuteRadios = v; ApplyMuteRadios(v); ScheduleSave() end,
-})
-
-P_Misc:CreateSection("EMOTES")
-P_Misc:CreateButton({ Name="Get All Emotes", Callback=function()
-    PlayClickSound()
-    local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-    local Emotes = PlayerGui:FindFirstChild("MainGUI") and
-                   PlayerGui.MainGUI:FindFirstChild("Game") and
-                   PlayerGui.MainGUI.Game:FindFirstChild("Emotes")
-    if Emotes then
-        local ok = pcall(function()
-            require(ReplicatedStorage.Modules.EmoteModule).GeneratePage(
-                {"headless","zombie","zen","ninja","floss","dab","sit"}, Emotes, "Premium Emote")
-        end)
-        N("EMOTES", ok and "Emotes obtidos!" or "Falhou!", ok and "#00FF88" or "#FF4444")
-    else N("EMOTES","GUI de emotes não encontrada!","#FF4444") end
+T_Legit:Button({ Title="FLING SELECIONADO", Callback=function()
+    if _flingSelectedPlayer~="" then ToggleFlingPlayer(_flingSelectedPlayer)
+    else N("FLING","Selecione um jogador primeiro!") end
 end })
-P_Misc:CreateButton({ Name="Ninja",    Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("ninja")    end) end })
-P_Misc:CreateButton({ Name="Dab",      Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("dab")      end) end })
-P_Misc:CreateButton({ Name="Floss",    Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("floss")    end) end })
-P_Misc:CreateButton({ Name="Headless", Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("headless") end) end })
-P_Misc:CreateButton({ Name="Zen",      Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("zen")      end) end })
-P_Misc:CreateButton({ Name="Zombie",   Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("zombie")   end) end })
-P_Misc:CreateButton({ Name="Sit",      Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("sit")      end) end })
+
+T_Legit:Section({ Title = "PROTEÇÃO" })
+T_Legit:Toggle({ Title="Anti-Fling", Value=Config.AntiFling, Callback=function(v) Config.AntiFling=v; ScheduleSave() end })
+T_Legit:Toggle({ Title="Second Life (Godmode)", Value=Config.SecondLife, Callback=function(v) Config.SecondLife=v; ApplySecondLife(v); ScheduleSave() end })
+
+T_Legit:Section({ Title = "PRANK BOMB" })
+T_Legit:Toggle({ Title="Auto Prank Bomb", Value=Config.AutoPrankBomb, Callback=function(v) Config.AutoPrankBomb=v; ApplyAutoPrankBomb(v); ScheduleSave() end })
+
+T_Legit:Section({ Title = "AUTO GRAB GUN" })
+T_Legit:Toggle({ Title="Auto Grab Gun", Value=Config.AutoGrabGun, Callback=function(v) Config.AutoGrabGun=v; ScheduleSave() end })
+T_Legit:Toggle({ Title="Mostrar Botão Grab", Value=Config.ShowGrabBtn, Callback=function(v) Config.ShowGrabBtn=v; GrabFrame.Visible=v; SaveConfig() end })
+T_Legit:Button({ Title="FORCE GRAB GUN", Callback=function() PerformGrabGun() end })
+T_Legit:Slider({ Title="Grab Distance (st)", Min=1, Max=100, Rounding=0, Value=Config.GrabDistance, Callback=function(v) Config.GrabDistance=v; ScheduleSave() end })
+
+T_Legit:Section({ Title = "GHOST / INVISIBLE" })
+T_Legit:Toggle({ Title="Mostrar Botão Invisible", Value=Config.ShowInvisBtn, Callback=function(v) Config.ShowInvisBtn=v; InvisFrame.Visible=v; SaveConfig() end })
+T_Legit:Button({ Title="TOGGLE INVISIBLE", Callback=function() ToggleInvis() end })
+
+T_Legit:Section({ Title = "TELEPORT" })
+T_Legit:Button({ Title="TP TO MAP", Callback=function()
+    PlayClickSound()
+    local function getMap() for _,o in ipairs(workspace:GetChildren()) do if o:FindFirstChild("CoinContainer") and o:FindFirstChild("Spawns") then return o end end end
+    local map=getMap(); if not map then N("TP","Mapa não encontrado!"); return end
+    local spawns=map:FindFirstChild("Spawns"); if not spawns then N("TP","Sem spawns!"); return end
+    local pts=spawns:GetChildren(); if #pts==0 then N("TP","Sem pontos!"); return end
+    local sp=pts[math.random(1,#pts)]
+    local char=LocalPlayer.Character; if char and char:FindFirstChild("HumanoidRootPart") then
+        char:MoveTo(sp.Position); N("TP","Teleportado para o mapa!")
+    end
+end })
+T_Legit:Dropdown({ Title="TP to Role", List={"Sheriff","Murderer","Hero"}, Value="Sheriff", Callback=function(v) PlayClickSound(); TeleportToRole(v) end })
+T_Legit:Dropdown({ Title="TP to Player", List={"Closest Player","Random Player"}, Value="Closest Player", Callback=function(v) PlayClickSound(); TeleportToPlayer(v) end })
+
+T_Legit:Section({ Title = "MOVEMENT MODS" })
+T_Legit:Toggle({ Title="Enable WalkSpeed", Value=Config.WalkSpeedEnabled, Callback=function(v) Config.WalkSpeedEnabled=v; ScheduleSave() end })
+T_Legit:Slider({ Title="WalkSpeed Value", Min=16, Max=100, Rounding=0, Value=Config.WalkSpeedValue, Callback=function(v) Config.WalkSpeedValue=v; ScheduleSave() end })
+T_Legit:Toggle({ Title="Enable JumpPower", Value=Config.JumpPowerEnabled, Callback=function(v) Config.JumpPowerEnabled=v; ScheduleSave() end })
+T_Legit:Slider({ Title="JumpPower Value", Min=50, Max=300, Rounding=0, Value=Config.JumpPowerValue, Callback=function(v) Config.JumpPowerValue=v; ScheduleSave() end })
+
+T_Legit:Section({ Title = "SPEED GLITCH" })
+T_Legit:Dropdown({ Title="Speed Glitch Mode", List={"With Item","No Item"}, Value=Config.SpeedGlitchMode, Callback=function(v) Config.SpeedGlitchMode=v; ScheduleSave() end })
+T_Legit:Slider({ Title="Speed Glitch Power", Min=1, Max=320, Rounding=0, Value=Config.SpeedGlitchPower, Callback=function(v) Config.SpeedGlitchPower=v; ScheduleSave() end })
+T_Legit:Toggle({ Title="Enable Speed Glitch", Value=Config.SpeedGlitch, Callback=function(v) Config.SpeedGlitch=v; ApplySpeedGlitch(v); ScheduleSave() end })
 
 -- ============================================================
--- ABA CONFIG
+-- FARM
 -- ============================================================
-P_Cfg:CreateSection("Config Manager")
-P_Cfg:CreateParagraph({
-    Title   = "Nota",
-    Content = "O config é salvo automaticamente em JSON. Use os botões abaixo para salvar/carregar manualmente.",
-})
+T_Farm:Section({ Title = "COINS REACH" })
+T_Farm:Toggle({ Title="Coins Reach (4x Size)", Value=Config.CoinsReach, Callback=function(v)
+    Config.CoinsReach=v
+    if v then
+        coinOrig={}
+        for _,obj in pairs(Workspace:GetDescendants()) do
+            if obj.Name=="Coin_Server" and obj:IsA("BasePart") then coinOrig[obj]=obj.Size; obj.Size=coinOrig[obj]*4 end
+        end
+        coinReachConn=Workspace.DescendantAdded:Connect(function(obj)
+            if obj.Name=="Coin_Server" and obj:IsA("BasePart") then coinOrig[obj]=obj.Size; obj.Size=coinOrig[obj]*4 end
+        end)
+    else
+        for obj,orig in pairs(coinOrig) do if obj and obj.Parent then obj.Size=orig end end
+        if coinReachConn then coinReachConn:Disconnect(); coinReachConn=nil end
+        coinOrig={}
+    end
+    ScheduleSave()
+end })
+T_Farm:Toggle({ Title="Coins Remove", Value=Config.CoinsRemove, Callback=function(v) Config.CoinsRemove=v; ApplyCoinsRemove(v); ScheduleSave() end })
+T_Farm:Toggle({ Title="Optimizer Coins", Value=Config.OptimizerCoins, Callback=function(v) Config.OptimizerCoins=v; ApplyOptimizerCoins(v); ScheduleSave() end })
 
-local _cfgNameInput = ""
-P_Cfg:CreateTextBox({
-    Name        = "Nome do Arquivo",
-    Default     = ConfigFileName,
-    Flag        = "CfgNameInput",
-    Callback    = function(v)
-        if v and v ~= "" then _cfgNameInput = v end
-    end,
-})
+T_Farm:Section({ Title = "AUTO FARM COINS" })
+T_Farm:Toggle({ Title="Auto Farm Coins", Value=Config.AutoFarmCoins, Callback=function(v)
+    Config.AutoFarmCoins=v
+    if v then autoFarmCoinsRunning=true; autoFarmCoinsThread=task.spawn(AutoFarmCoinsFunc)
+    else autoFarmCoinsRunning=false; if autoFarmCoinsThread then task.cancel(autoFarmCoinsThread); autoFarmCoinsThread=nil end end
+    ScheduleSave()
+end })
+T_Farm:Button({ Title="FORCE STOP FARM", Callback=function()
+    autoFarmCoinsRunning=false; Config.AutoFarmCoins=false
+    if autoFarmCoinsThread then task.cancel(autoFarmCoinsThread); autoFarmCoinsThread=nil end
+    N("FARM","Farm parado!")
+end })
 
-P_Cfg:CreateButton({
-    Name     = "Salvar Config Agora",
-    Callback = function()
-        SaveConfig()
-        N("Config","Salvo em "..ConfigFileName,"#50C864")
-    end,
-})
-P_Cfg:CreateButton({
-    Name     = "Carregar Config Agora",
-    Callback = function()
-        LoadConfig()
-        N("Config","Carregado de "..ConfigFileName,"#0088FF")
-    end,
-})
-P_Cfg:CreateButton({
-    Name     = "Resetar para Padrão",
-    Callback = function()
-        for k, v in pairs(DefaultConfig) do Config[k] = v end
-        SaveConfig()
-        N("Config","Config resetado para padrão!","#FFA500")
-    end,
-})
+T_Farm:Section({ Title = "TWEEN AUTO FARM" })
+T_Farm:Toggle({ Title="Tween Auto Farm", Value=Config.TweenAutoFarm, Callback=function(v)
+    Config.TweenAutoFarm=v; TweenAutoFarmEnabled=v
+    if v then tweenVisited={}; tweenCurrentContainer=nil; TweenFarm_CreateFloat()
+    else if TweenFloatPart then TweenFloatPart:Destroy(); TweenFloatPart=nil end; tweenVisited={} end
+    ScheduleSave()
+end })
+T_Farm:Toggle({ Title="Reset Bag When Full", Value=Config.TweenResetBag, Callback=function(v) Config.TweenResetBag=v; ScheduleSave() end })
+T_Farm:Toggle({ Title="Random Coin", Value=Config.TweenRandomCoin, Callback=function(v) Config.TweenRandomCoin=v; ScheduleSave() end })
+T_Farm:Slider({ Title="Tween Speed", Min=1, Max=30, Rounding=0, Value=Config.TweenSpeed, Callback=function(v) Config.TweenSpeed=v; ScheduleSave() end })
+T_Farm:Slider({ Title="Coin Delay (x0.1s)", Min=0, Max=50, Rounding=0, Value=Config.TweenCoinDelay, Callback=function(v) Config.TweenCoinDelay=v; ScheduleSave() end })
+T_Farm:Dropdown({ Title="Farm Mode", List={"Normal","Below the map"}, Value=Config.TweenFarmMode, Callback=function(v) Config.TweenFarmMode=v; ScheduleSave() end })
 
-P_Cfg:CreateSection("Info")
-P_Cfg:CreateParagraph({ Title="Hub",     Content="NEXUS HUB MM2 V4.0" })
-P_Cfg:CreateParagraph({ Title="UI",      Content="Arcylic by noowtf31" })
-P_Cfg:CreateParagraph({ Title="Toggle",  Content="RightControl" })
+T_Farm:Section({ Title = "TWEEN FARM — AÇÕES (Bag Full)" })
+T_Farm:Toggle({ Title="Kill Murder (Bag Full)", Value=Config.TweenKillSheriff, Callback=function(v)
+    Config.TweenKillSheriff=v
+    if v then TweenKillSheriff_Stop(); tweenKillSheriffThread=task.spawn(TweenKillSheriff_Loop)
+    else TweenKillSheriff_Stop() end
+    ScheduleSave()
+end })
+T_Farm:Toggle({ Title="Kill All (Bag Full + Murderer)", Value=Config.TweenKillAll, Callback=function(v)
+    Config.TweenKillAll=v
+    if v then TweenKillAll_Stop(); tweenKillAllThread=task.spawn(TweenKillAll_Loop)
+    else TweenKillAll_Stop() end
+    ScheduleSave()
+end })
+T_Farm:Toggle({ Title="Fling Murder (Bag Full)", Value=Config.TweenFlingMurder, Callback=function(v)
+    Config.TweenFlingMurder=v
+    if v then TweenFlingMurder_Stop(); tweenFlingMurderThread=task.spawn(TweenFlingMurder_Loop)
+    else TweenFlingMurder_Stop(); StopFling() end
+    ScheduleSave()
+end })
+
+-- ============================================================
+-- MISC
+-- ============================================================
+T_Misc:Section({ Title = "MISC" })
+T_Misc:Toggle({ Title="Instant Role (Show Alert)", Value=Config.InstantRole, Callback=function(v) Config.InstantRole=v; ScheduleSave() end })
+T_Misc:Toggle({ Title="Anti-Lag (Desativa Sombras)", Value=Config.AntiLag, Callback=function(v)
+    Config.AntiLag=v
+    if v then Lighting.GlobalShadows=false; Lighting.ShadowSoftness=0 else Lighting.GlobalShadows=true end
+    ScheduleSave()
+end })
+T_Misc:Toggle({ Title="Disable Footstep", Value=Config.DisableFootstep, Callback=function(v) Config.DisableFootstep=v; ApplyDisableFootstep(v); ScheduleSave() end })
+T_Misc:Toggle({ Title="Show Round Timer", Value=Config.ShowRoundTimer, Callback=function(v) Config.ShowRoundTimer=v; ApplyShowRoundTimer(v); ScheduleSave() end })
+
+T_Misc:Section({ Title = "ANTI BANG & SNITCH" })
+T_Misc:Button({ Title="Anti Bang", Callback=function()
+    PlayClickSound()
+    local hrp=LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then N("ANTI BANG","Sem personagem!"); return end
+    local last=hrp.CFrame; local origH=workspace.FallenPartsDestroyHeight
+    workspace.FallenPartsDestroyHeight=-1000; hrp.CFrame=CFrame.new(Vector3.new(0,-500,0))
+    task.wait(0.7); hrp.CFrame=last; workspace.FallenPartsDestroyHeight=origH
+    N("ANTI BANG","Feito!")
+end })
+T_Misc:Button({ Title="Chat Snitch", Callback=function()
+    PlayClickSound()
+    local ok,data=pcall(function() local remote=ReplicatedStorage:FindFirstChild("GetPlayerData",true); if remote then return remote:InvokeServer() end end)
+    if not ok or not data then N("SNITCH","Falhou!"); return end
+    local sheriff,murderer
+    for name,role in pairs(data) do
+        if type(role)=="table" then
+            if role.Role=="Murderer" then murderer=name elseif role.Role=="Sheriff" then sheriff=name end
+        end
+    end
+    local TCS=game:GetService("TextChatService")
+    local ch=TCS and TCS.TextChannels and TCS.TextChannels:FindFirstChild("RBXGeneral")
+    if ch then
+        if sheriff and murderer then pcall(function() ch:SendAsync(sheriff.." is Sheriff and "..murderer.." is Murderer.") end)
+        elseif murderer then pcall(function() ch:SendAsync(murderer.." is the Murderer.") end)
+        elseif sheriff then pcall(function() ch:SendAsync(sheriff.." is the Sheriff.") end)
+        else N("SNITCH","Nenhum papel detectado!"); return end
+        N("SNITCH","Enviado no chat!")
+    else N("SNITCH","TextChatService não encontrado!") end
+end })
+
+T_Misc:Section({ Title = "TRAP SYSTEM" })
+T_Misc:Toggle({ Title="Remove Traps", Value=Config.RemoveTrap, Callback=function(v)
+    Config.RemoveTrap=v; if v then Config.SeeTrap=false end; Trap_UpdateAll(); ScheduleSave()
+end })
+T_Misc:Toggle({ Title="See Traps (ESP)", Value=Config.SeeTrap, Callback=function(v)
+    Config.SeeTrap=v; if not v then Trap_ClearLabels() end; Trap_UpdateAll(); ScheduleSave()
+end })
+
+T_Misc:Section({ Title = "MUTE RADIOS" })
+T_Misc:Toggle({ Title="Mute Radios", Value=Config.MuteRadios, Callback=function(v) Config.MuteRadios=v; ApplyMuteRadios(v); ScheduleSave() end })
+
+T_Misc:Section({ Title = "EMOTES" })
+T_Misc:Button({ Title="Get All Emotes", Callback=function()
+    PlayClickSound()
+    local PlayerGui=LocalPlayer:WaitForChild("PlayerGui")
+    local Emotes=PlayerGui:FindFirstChild("MainGUI") and PlayerGui.MainGUI:FindFirstChild("Game") and PlayerGui.MainGUI.Game:FindFirstChild("Emotes")
+    if Emotes then
+        local ok=pcall(function() require(ReplicatedStorage.Modules.EmoteModule).GeneratePage({"headless","zombie","zen","ninja","floss","dab","sit"},Emotes,"Premium Emote") end)
+        N("EMOTES",ok and "Emotes obtidos!" or "Falhou!")
+    else N("EMOTES","GUI não encontrada!") end
+end })
+T_Misc:Button({ Title="Ninja",    Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("ninja")    end) end })
+T_Misc:Button({ Title="Dab",      Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("dab")      end) end })
+T_Misc:Button({ Title="Floss",    Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("floss")    end) end })
+T_Misc:Button({ Title="Headless", Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("headless") end) end })
+T_Misc:Button({ Title="Zen",      Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("zen")      end) end })
+T_Misc:Button({ Title="Zombie",   Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("zombie")   end) end })
+T_Misc:Button({ Title="Sit",      Callback=function() pcall(function() ReplicatedStorage.Remotes.Misc.PlayEmote:Fire("sit")      end) end })
+
+-- ============================================================
+-- CONFIG
+-- ============================================================
+T_Cfg:Section({ Title = "Config Manager" })
+T_Cfg:Textbox({ Title="Nome do Arquivo", Placeholder=ConfigFileName, Value=ConfigFileName, ClearTextOnFocus=false, Callback=function(v) if v and v~="" then ConfigFileName=v end end })
+T_Cfg:Button({ Title="Salvar Config", Callback=function() SaveConfig(); N("Config","Salvo em "..ConfigFileName) end })
+T_Cfg:Button({ Title="Carregar Config", Callback=function() LoadConfig(); N("Config","Carregado de "..ConfigFileName) end })
+T_Cfg:Button({ Title="Resetar para Padrão", Callback=function()
+    for k,v in pairs(DefaultConfig) do Config[k]=v end; SaveConfig(); N("Config","Resetado para padrão!")
+end })
+
+T_Cfg:Section({ Title = "Info" })
+T_Cfg:Textbox({ Title="Versão", Value="NEXUS HUB MM2 V4.0", Placeholder="", ClearTextOnFocus=false, Callback=function() end })
+
+Window:Line()
 
 -- ============================================================
 -- APLICAR TODAS AS CONFIGURAÇÕES SALVAS
@@ -3912,55 +3370,34 @@ local function ApplyAllConfig()
     if Config.ThrowKnifeReach then ApplyThrowKnifeReach(true) end
     if Config.SpeedGlitch     then ApplySpeedGlitch(true) end
 
-    -- Botões flutuantes
     ShootGui.Enabled    = Config.SilentAim    or false
     GrabFrame.Visible   = Config.ShowGrabBtn  or false
     InvisFrame.Visible  = Config.ShowInvisBtn or false
     DesyncFrame.Visible = Config.ShowDesyncBtn or false
 
-    -- Estado Invisible
     if Config.InvisActive then
-        InvisActive = true
-        InvisBtn.Text       = "ACTIVE"
-        InvisBtn.TextColor3 = Color3.fromRGB(0,255,150)
-        InvisStroke.Color   = Color3.fromRGB(0,255,150)
+        InvisActive=true; InvisBtn.Text="ACTIVE"
+        InvisBtn.TextColor3=Color3.fromRGB(0,255,150); InvisStroke.Color=Color3.fromRGB(0,255,150)
         if LocalPlayer.Character then
-            for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
-                if (v:IsA("BasePart") or v:IsA("Decal")) and v.Name ~= "HumanoidRootPart" then
-                    v.LocalTransparencyModifier = 1
+            for _,v in pairs(LocalPlayer.Character:GetDescendants()) do
+                if (v:IsA("BasePart") or v:IsA("Decal")) and v.Name~="HumanoidRootPart" then
+                    v.LocalTransparencyModifier=1
                 end
             end
         end
     else
-        InvisActive = false
-        InvisBtn.Text       = "INVISIBLE"
-        InvisBtn.TextColor3 = Color3.fromRGB(140,50,255)
-        InvisStroke.Color   = Color3.fromRGB(140,50,255)
-        -- limpa chair/weld do ghost ao respawn
+        InvisActive=false; InvisBtn.Text="INVISIBLE"
+        InvisBtn.TextColor3=Color3.fromRGB(140,50,255); InvisStroke.Color=Color3.fromRGB(140,50,255)
         pcall(_invisClean)
     end
 
-    -- Auto Farm Coins
-    if Config.AutoFarmCoins then
-        autoFarmCoinsRunning = true
-        autoFarmCoinsThread  = task.spawn(AutoFarmCoinsFunc)
-    end
-
-    -- Tween Auto Farm
-    if Config.TweenAutoFarm then
-        TweenAutoFarmEnabled = true
-        tweenVisited = {}; tweenCurrentContainer = nil
-        TweenFarm_CreateFloat()
-    end
-    if Config.TweenKillSheriff then
-        tweenKillSheriffThread = task.spawn(TweenKillSheriff_Loop)
-    end
-    if Config.TweenKillAll then
-        tweenKillAllThread = task.spawn(TweenKillAll_Loop)
-    end
-    if Config.TweenFlingMurder then
-        tweenFlingMurderThread = task.spawn(TweenFlingMurder_Loop)
-    end
+    if Config.AutoFarmCoins then autoFarmCoinsRunning=true; autoFarmCoinsThread=task.spawn(AutoFarmCoinsFunc) end
+    if Config.TweenAutoFarm then TweenAutoFarmEnabled=true; tweenVisited={}; tweenCurrentContainer=nil; TweenFarm_CreateFloat() end
+    if Config.TweenKillSheriff then tweenKillSheriffThread=task.spawn(TweenKillSheriff_Loop) end
+    if Config.TweenKillAll     then tweenKillAllThread=task.spawn(TweenKillAll_Loop) end
+    if Config.TweenFlingMurder then tweenFlingMurderThread=task.spawn(TweenFlingMurder_Loop) end
 end
 
 ApplyAllConfig()
+
+Window:Notify({ Title="NEXUS HUB MM2", Desc="V4.0 carregado! LeftCtrl para abrir.", Time=5 })
