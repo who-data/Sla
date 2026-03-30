@@ -1,4 +1,4 @@
--- VioletUI Config Manager UI (Executor-ready)
+-- VioletUI Config Managddder UI (Executor-ready)
 if getgenv().VioletUILoaded then return end
 getgenv().VioletUILoaded = true
 
@@ -33,10 +33,11 @@ local DEFAULT_SETTINGS = {
     autoLoad = true, autoSave = true, autoSaveInterval = 30,
     uiWidth = 520, uiHeight = 380,
     transparent = false, animatedBg = true, openKey = "RightControl", showMobileBtn = true,
+    textSize = 11,
     defaultConfigs = {}
 }
 
-local function decodeJson(p, f) local ok, d = pcall(function() return HttpService:JSONDecode(p) end); return (ok and type(d) == "table") and d or f end
+local function decodeJson(p, f) local ok, d = pcall(function() return HttpService:JSONDecode(p) end); if ok and type(d) == "table" then return d end; return f end
 local function encodeJson(p) return HttpService:JSONEncode(p) end
 local function readSettings() return FS.isfile(SETTINGS_FILE) and decodeJson(FS.readfile(SETTINGS_FILE), DEFAULT_SETTINGS) or DEFAULT_SETTINGS end
 local function writeSettings(s) FS.writefile(SETTINGS_FILE, encodeJson(s)) end
